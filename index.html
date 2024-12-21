@@ -149,6 +149,14 @@
             border: 1px solid #ddd;
             display: block;
         }
+        /* Postprocessing Canvas Styles */
+        #postprocessingCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 5; /* Below overlayCanvas */
+            pointer-events: none; /* Allow clicks to pass through */
+        }
         /* Updated overlayCanvas CSS: Removed width and height */
         #overlayCanvas {
             position: absolute;
@@ -178,6 +186,23 @@
                 padding: 10px 25px;
             }
         }
+
+        /* Postprocessing Controls Styles */
+        .postprocessing-controls {
+            display: none; /* Hidden by default */
+            background-color: #222;
+            padding: 10px 30px;
+        }
+        .postprocessing-controls label {
+            display: block;
+            margin: 10px 0 5px 0;
+            color: #f1f1f1;
+        }
+        .postprocessing-controls input[type="range"],
+        .postprocessing-controls input[type="checkbox"] {
+            width: 100%;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
@@ -194,6 +219,25 @@
         <button id="crop-button">Crop</button>
         <button id="confirm-crop-button" style="display:none;">Confirm Crop</button>
         <button id="undo-draw-button" style="display:none;">Undo Draw</button>
+
+        <!-- Postprocessing Submenu -->
+        <button id="postprocessing-button">Postprocessing</button>
+        <div class="postprocessing-controls" id="postprocessing-controls">
+            <label for="grayscale">Grayscale:</label>
+            <input type="checkbox" id="grayscale">
+
+            <label for="highlight">Highlight:</label>
+            <input type="range" id="highlight" min="0" max="100" value="0">
+
+            <label for="clarity">Clarity:</label>
+            <input type="range" id="clarity" min="0" max="100" value="50">
+
+            <label for="brightness">Brightness:</label>
+            <input type="range" id="brightness" min="-100" max="100" value="0">
+
+            <label for="sharpening">Sharpening:</label>
+            <input type="range" id="sharpening" min="0" max="100" value="0">
+        </div>
     </div>
 
     <h1>OCR Image Processor with Clickable Text Highlights and Crop Feature</h1>
@@ -205,6 +249,8 @@
         <input type="file" id="imageInput" accept="image/*">
         <div id="imageContainer" style="display:none;">
             <img id="uploadedImage" alt="Uploaded Image">
+            <!-- New Postprocessing Canvas -->
+            <canvas id="postprocessingCanvas"></canvas>
             <canvas id="overlayCanvas"></canvas>
         </div>
         <p id="statusMessage"></p>
@@ -257,6 +303,7 @@
         const uploadedImage = document.getElementById('uploadedImage');
         const imageContainer = document.getElementById('imageContainer');
         const overlayCanvas = document.getElementById('overlayCanvas');
+        const postprocessingCanvas = document.getElementById('postprocessingCanvas'); // New
         const performOcrButton = document.getElementById('perform-ocr');
         const clearImageButton = document.getElementById('clear-image');
         const statusMessage = document.getElementById('statusMessage');
@@ -267,6 +314,15 @@
         const cropButton = document.getElementById('crop-button');
         const confirmCropButton = document.getElementById('confirm-crop-button');
         const undoDrawButton = document.getElementById('undo-draw-button');
+
+        // Postprocessing Controls
+        const postprocessingButton = document.getElementById('postprocessing-button');
+        const postprocessingControls = document.getElementById('postprocessing-controls');
+        const grayscaleCheckbox = document.getElementById('grayscale');
+        const highlightSlider = document.getElementById('highlight');
+        const claritySlider = document.getElementById('clarity');
+        const brightnessSlider = document.getElementById('brightness');
+        const sharpeningSlider = document.getElementById('sharpening');
 
         // Input Fields
         const field1 = document.getElementById('field1');
@@ -345,16 +401,33 @@
             });
         });
 
+        // Event Listener for Postprocessing Button to Toggle Controls
+        postprocessingButton.addEventListener('click', () => {
+            postprocessingControls.style.display = postprocessingControls.style.display === 'block' ? 'none' : 'block';
+        });
+
         // Adjust Canvas for High-DPI Displays and Responsive Sizing
         function adjustCanvas() {
-            const ctx = overlayCanvas.getContext('2d');
             const ratio = window.devicePixelRatio || 1;
+
+            // Adjust postprocessingCanvas
+            postprocessingCanvas.width = uploadedImage.clientWidth * ratio;
+            postprocessingCanvas.height = uploadedImage.clientHeight * ratio;
+            postprocessingCanvas.style.width = `${uploadedImage.clientWidth}px`;
+            postprocessingCanvas.style.height = `${uploadedImage.clientHeight}px`;
+            const ppCtx = postprocessingCanvas.getContext('2d');
+            ppCtx.scale(ratio, ratio);
+
+            // Adjust overlayCanvas
             overlayCanvas.width = uploadedImage.clientWidth * ratio;
             overlayCanvas.height = uploadedImage.clientHeight * ratio;
             overlayCanvas.style.width = `${uploadedImage.clientWidth}px`;
             overlayCanvas.style.height = `${uploadedImage.clientHeight}px`;
-            ctx.scale(ratio, ratio);
-            redrawCanvas();
+            const ovCtx = overlayCanvas.getContext('2d');
+            ovCtx.scale(ratio, ratio);
+
+            // After adjusting, redraw postprocessing
+            applyPostprocessing();
         }
 
         // Function to Update HANDLE_SIZE Based on Screen Width
@@ -368,7 +441,13 @@
         }
 
         // Call updateHandleSize on Initial Load and on Window Resize
-        window.addEventListener('load', updateHandleSize);
+        window.addEventListener('load', () => {
+            updateHandleSize();
+            // Also apply postprocessing if image is already loaded
+            if (uploadedImage.complete && uploadedImage.naturalWidth !== 0) {
+                applyPostprocessing();
+            }
+        });
         window.addEventListener('resize', () => {
             adjustCanvas();
             updateHandleSize();
@@ -400,6 +479,9 @@
                     confirmCropButton.style.display = 'none';
                     undoDrawButton.style.display = 'none'; // Hide Undo Draw initially
                     redrawCanvas();
+
+                    // Apply postprocessing after image is loaded
+                    applyPostprocessing();
                 };
             };
             reader.readAsDataURL(file);
@@ -764,6 +846,10 @@
             handlesVisible = true; // Show handles when resetting
             undoDrawButton.style.display = 'none';
             redrawCanvas();
+
+            // Clear postprocessing canvas
+            const ppCtx = postprocessingCanvas.getContext('2d');
+            ppCtx.clearRect(0, 0, postprocessingCanvas.width, postprocessingCanvas.height);
         }
 
         // Function to Reset Input Fields
@@ -1039,6 +1125,9 @@
                 handlesVisible = true; // Show handles after cropping
                 undoDrawButton.style.display = 'none';
                 redrawCanvas();
+
+                // Apply postprocessing after cropping
+                applyPostprocessing();
             };
         }
 
@@ -1164,6 +1253,161 @@
 
         // Function to Draw Word Groups
         // Already defined above
+
+        /* -------------------- Postprocessing Functions -------------------- */
+
+        // Function to Apply Postprocessing Effects
+        function applyPostprocessing() {
+            if (!uploadedImage.src) return;
+
+            const ppCtx = postprocessingCanvas.getContext('2d');
+            const ovCtx = overlayCanvas.getContext('2d');
+
+            // Clear Postprocessing Canvas
+            ppCtx.clearRect(0, 0, postprocessingCanvas.width, postprocessingCanvas.height);
+
+            // Draw the uploaded image onto Postprocessing Canvas
+            ppCtx.drawImage(uploadedImage, 0, 0, uploadedImage.clientWidth, uploadedImage.clientHeight);
+
+            // Get ImageData
+            let imageData = ppCtx.getImageData(0, 0, postprocessingCanvas.width, postprocessingCanvas.height);
+            let data = imageData.data;
+
+            // Apply Grayscale
+            if (grayscaleCheckbox.checked) {
+                for (let i = 0; i < data.length; i += 4) {
+                    const avg = 0.3 * data[i] + 0.59 * data[i + 1] + 0.11 * data[i + 2];
+                    data[i] = data[i + 1] = data[i + 2] = avg;
+                }
+            }
+
+            // Apply Brightness
+            const brightnessValue = parseInt(brightnessSlider.value, 10); // Range: -100 to 100
+            if (brightnessValue !== 0) {
+                const factor = brightnessValue;
+                for (let i = 0; i < data.length; i += 4) {
+                    data[i] += factor;
+                    data[i + 1] += factor;
+                    data[i + 2] += factor;
+                }
+            }
+
+            // Apply Clarity (Implemented as Contrast Adjustment)
+            const clarityValue = parseInt(claritySlider.value, 10); // Range: 0 to 100
+            if (clarityValue !== 50) { // Default is 50 (no change)
+                const contrast = clarityValue / 50; // Normalize to 0-2
+                for (let i = 0; i < data.length; i += 4) {
+                    data[i] = ((data[i] - 128) * contrast) + 128;
+                    data[i + 1] = ((data[i + 1] - 128) * contrast) + 128;
+                    data[i + 2] = ((data[i + 2] - 128) * contrast) + 128;
+                }
+            }
+
+            // Apply Highlight (Implemented as additional Brightness)
+            const highlightValue = parseInt(highlightSlider.value, 10); // Range: 0 to 100
+            if (highlightValue !== 0) {
+                const factor = highlightValue * 0.5; // Scale down the factor
+                for (let i = 0; i < data.length; i += 4) {
+                    // Only brighten pixels that are not too dark
+                    if (data[i] > 50 || data[i + 1] > 50 || data[i + 2] > 50) {
+                        data[i] += factor;
+                        data[i + 1] += factor;
+                        data[i + 2] += factor;
+                    }
+                }
+            }
+
+            // Put modified data back
+            ppCtx.putImageData(imageData, 0, 0);
+
+            // Apply Sharpening
+            const sharpeningValue = parseInt(sharpeningSlider.value, 10); // Range: 0 to 100
+            if (sharpeningValue > 0) {
+                applySharpeningFilter(ppCtx, sharpeningValue / 100); // Normalize to 0-1
+            }
+
+            // Update imageDataURL to use the postprocessed image
+            imageDataURL = postprocessingCanvas.toDataURL();
+
+            // Redraw overlayCanvas
+            redrawCanvas();
+        }
+
+        // Function to Apply Sharpening Filter
+        function applySharpeningFilter(ctx, intensity) {
+            const imageData = ctx.getImageData(0, 0, postprocessingCanvas.width, postprocessingCanvas.height);
+            const data = imageData.data;
+            const width = imageData.width;
+            const height = imageData.height;
+
+            // Simple sharpening kernel
+            const kernel = [
+                0, -1, 0,
+                -1, 5, -1,
+                0, -1, 0
+            ];
+
+            const side = Math.round(Math.sqrt(kernel.length));
+            const halfSide = Math.floor(side / 2);
+
+            const src = data;
+            const sw = width;
+            const sh = height;
+            const w = sw;
+            const h = sh;
+            const output = new Uint8ClampedArray(src.length);
+
+            for (let y = 0; y < h; y++) {
+                for (let x = 0; x < w; x++) {
+                    let r = 0, g = 0, b = 0;
+                    for (let ky = 0; ky < side; ky++) {
+                        for (let kx = 0; kx < side; kx++) {
+                            const pos = (y + ky - halfSide) * sw + (x + kx - halfSide);
+                            if (pos >= 0 && pos < sw * sh) {
+                                const offset = pos * 4;
+                                const weight = kernel[ky * side + kx];
+                                r += src[offset] * weight;
+                                g += src[offset + 1] * weight;
+                                b += src[offset + 2] * weight;
+                            }
+                        }
+                    }
+                    const dstOffset = (y * w + x) * 4;
+                    output[dstOffset] = Math.min(Math.max(r * intensity, 0), 255);
+                    output[dstOffset + 1] = Math.min(Math.max(g * intensity, 0), 255);
+                    output[dstOffset + 2] = Math.min(Math.max(b * intensity, 0), 255);
+                    output[dstOffset + 3] = src[dstOffset + 3]; // alpha
+                }
+            }
+
+            // Put the sharpened data back
+            for (let i = 0; i < data.length; i++) {
+                data[i] = output[i];
+            }
+            ctx.putImageData(imageData, 0, 0);
+        }
+
+        // Event Listeners for Postprocessing Controls
+        grayscaleCheckbox.addEventListener('change', applyPostprocessing);
+        highlightSlider.addEventListener('input', applyPostprocessing);
+        claritySlider.addEventListener('input', applyPostprocessing);
+        brightnessSlider.addEventListener('input', applyPostprocessing);
+        sharpeningSlider.addEventListener('input', applyPostprocessing);
+
+        /* -------------------- End of Postprocessing Functions -------------------- */
+
+        // Function to Assign Text to Fields
+        // Already handled via assignGroupToField
+
+        // Function to Perform OCR using the Postprocessed Image
+        // Already updated imageDataURL to postprocessed image
+
+        /* -------------------- Postprocessing Integration -------------------- */
+
+        // Function to Apply Postprocessing Effects (Defined Above)
+        // Already implemented above
+
+        /* -------------------- End of Postprocessing Integration -------------------- */
 
     </script>
 </body>
