@@ -41,7 +41,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start; /* Changed to flex-start to allow scrolling */
             padding: 20px;
         }
 
@@ -290,11 +290,6 @@
             color: #e0e0e0;
         }
 
-        /* Buttons in Side Menu */
-        .buttons-container {
-            display: none; /* Hidden since moved to side menu */
-        }
-
         /* Postprocessing Controls */
         .postprocessing-controls {
             display: none;
@@ -361,6 +356,12 @@
                 font-size: 14px;
                 padding: 10px 15px;
             }
+
+            .scroll-button {
+                width: 35px;
+                height: 35px;
+                font-size: 16px;
+            }
         }
 
         /* Modern Button Styles */
@@ -419,6 +420,16 @@
             background-color: #666;
             transform: translateY(-2px);
         }
+
+        /* Ensure side menu is scrollable if content overflows */
+        #sideMenu {
+            overflow-y: auto;
+        }
+
+        /* Prevent main container from being hidden under fixed side menu */
+        .container {
+            margin-left: 0; /* Adjusted dynamically via JavaScript if needed */
+        }
     </style>
 </head>
 <body>
@@ -461,8 +472,8 @@
 
         <!-- Scroll Buttons -->
         <div class="scroll-buttons">
-            <button id="scroll-up-button" class="side-menu-button scroll-button">&#9650;</button>
-            <button id="scroll-down-button" class="side-menu-button scroll-button">&#9660;</button>
+            <button id="scroll-up-button" class="side-menu-button scroll-button" aria-label="Scroll Up">&#9650;</button>
+            <button id="scroll-down-button" class="side-menu-button scroll-button" aria-label="Scroll Down">&#9660;</button>
         </div>
     </div>
 
@@ -569,6 +580,7 @@
         let currentRect = null;
         let highlightedRectangles = []; // Array to store rectangles with extracted text
         let scale = 1; // Uniform scaling factor
+        let imageDataURL = null; // To store postprocessed image data URL
 
         // Side Menu Toggle Function
         function toggleSideMenu() {
@@ -658,12 +670,14 @@
                     drawButton.textContent = 'Draw';
                     cropButton.textContent = 'Crop';
                     confirmCropButton.style.display = 'none';
+                    undoDrawButton.style.display = 'none'; // Hide Undo button initially
                     redrawCanvas();
 
                     applyPostprocessing(); // Apply any postprocessing effects
                 };
             };
             reader.readAsDataURL(file);
+            imageDataURL = null; // Reset imageDataURL when a new image is uploaded
         });
 
         // Event Listener for Draw Button
@@ -680,7 +694,7 @@
             isDrawingMode = !isDrawingMode;
             if (isDrawingMode) {
                 drawButton.textContent = 'Cancel Draw';
-                statusMessage.textContent = 'Draw mode activated. Click and drag on the image to draw rectangles for OCR.';
+                statusMessage.textContent = 'Draw mode activated. Touch and drag on the image to draw rectangles for OCR.';
                 isCroppingMode = false;
                 cropButton.textContent = 'Crop';
                 confirmCropButton.style.display = 'none';
@@ -973,6 +987,7 @@
             drawButton.textContent = 'Draw';
             cropButton.textContent = 'Crop';
             confirmCropButton.style.display = 'none';
+            undoDrawButton.style.display = 'none';
             redrawCanvas();
 
             const ppCtx = postprocessingCanvas.getContext('2d');
@@ -1182,11 +1197,6 @@
         sharpeningSlider.addEventListener('input', applyPostprocessing);
 
         /* -------------------- End of Postprocessing Functions -------------------- */
-
-        // Function to Assign Text to Fields
-        // Already handled via assignGroupToField
-
-        /* -------------------- End of Postprocessing Integration -------------------- */
 
         // Function to Assign Text to Fields
         // Already handled via assignGroupToField
