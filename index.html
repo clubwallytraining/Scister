@@ -571,7 +571,7 @@
         const sideMenu = document.getElementById('sideMenu');
 
         // State Variables
-        let rectangles = []; // Array to store user-drawn rectangles
+        let rectangles = []; // Array to store user-drawn rectangles in natural coordinates
         let isDrawingMode = false;
         let isCroppingMode = false;
         let isDrawing = false;
@@ -579,7 +579,7 @@
         let startY = 0;
         let currentRect = null;
         let highlightedRectangles = []; // Array to store rectangles with extracted text
-        let scale = 1; // Uniform scaling factor
+        let scale = 1; // Uniform scaling factor (naturalWidth / clientWidth)
         let imageDataURL = null; // To store postprocessed image data URL
 
         // Side Menu Toggle Function
@@ -641,7 +641,7 @@
             // Calculate uniform scaling factor based on natural size
             scale = uploadedImage.naturalWidth / uploadedImage.clientWidth;
 
-            // After adjusting, redraw postprocessing
+            // After adjusting, redraw postprocessing and overlay
             applyPostprocessing();
             redrawCanvas();
         }
@@ -736,16 +736,16 @@
             if (!isDrawingMode) return;
             isDrawing = true;
             const rect = overlayCanvas.getBoundingClientRect();
-            startX = (e.clientX - rect.left) / scale;
-            startY = (e.clientY - rect.top) / scale;
+            startX = (e.clientX - rect.left) * scale;
+            startY = (e.clientY - rect.top) * scale;
             currentRect = { x: startX, y: startY, width: 0, height: 0 };
         });
 
         overlayCanvas.addEventListener('mousemove', (e) => {
             if (!isDrawing || !currentRect) return;
             const rect = overlayCanvas.getBoundingClientRect();
-            const x = (e.clientX - rect.left) / scale;
-            const y = (e.clientY - rect.top) / scale;
+            const x = (e.clientX - rect.left) * scale;
+            const y = (e.clientY - rect.top) * scale;
             currentRect.width = x - startX;
             currentRect.height = y - startY;
             redrawCanvas();
@@ -773,8 +773,8 @@
             if (e.touches.length !== 1) return;
             isDrawing = true;
             const rect = overlayCanvas.getBoundingClientRect();
-            startX = (e.touches[0].clientX - rect.left) / scale;
-            startY = (e.touches[0].clientY - rect.top) / scale;
+            startX = (e.touches[0].clientX - rect.left) * scale;
+            startY = (e.touches[0].clientY - rect.top) * scale;
             currentRect = { x: startX, y: startY, width: 0, height: 0 };
         }, { passive: false });
 
@@ -783,8 +783,8 @@
             if (e.touches.length !== 1) return;
             e.preventDefault();
             const rect = overlayCanvas.getBoundingClientRect();
-            const x = (e.touches[0].clientX - rect.left) / scale;
-            const y = (e.touches[0].clientY - rect.top) / scale;
+            const x = (e.touches[0].clientX - rect.left) * scale;
+            const y = (e.touches[0].clientY - rect.top) * scale;
             currentRect.width = x - startX;
             currentRect.height = y - startY;
             redrawCanvas();
@@ -878,8 +878,8 @@
         overlayCanvas.addEventListener('click', (e) => {
             if (highlightedRectangles.length === 0) return;
             const rect = overlayCanvas.getBoundingClientRect();
-            const x = (e.clientX - rect.left) / scale;
-            const y = (e.clientY - rect.top) / scale;
+            const x = (e.clientX - rect.left) * scale;
+            const y = (e.clientY - rect.top) * scale;
 
             for (let group of highlightedRectangles) {
                 if (x >= group.x && x <= group.x + group.width && y >= group.y && y <= group.y + group.height) {
@@ -1013,11 +1013,11 @@
         // Function to Redraw Canvas
         function redrawCanvas() {
             clearCanvas();
-            // Draw existing rectangles
+            // Draw existing rectangles in red
             rectangles.forEach(rect => {
                 drawRectangle(rect, 'rgba(255, 0, 0, 0.3)', 'red');
             });
-            // Draw highlighted rectangles
+            // Draw highlighted rectangles in light blue
             highlightedRectangles.forEach(rect => {
                 drawRectangle(rect, 'rgba(173, 216, 230, 0.3)', 'lightblue');
             });
@@ -1033,8 +1033,8 @@
             ctx.fillStyle = fillStyle;
             ctx.strokeStyle = strokeStyle;
             ctx.lineWidth = 2;
-            ctx.fillRect(rect.x * scale, rect.y * scale, rect.width * scale, rect.height * scale);
-            ctx.strokeRect(rect.x * scale, rect.y * scale, rect.width * scale, rect.height * scale);
+            ctx.fillRect(rect.x / scale, rect.y / scale, rect.width / scale, rect.height / scale);
+            ctx.strokeRect(rect.x / scale, rect.y / scale, rect.width / scale, rect.height / scale);
         }
 
         // Function to Normalize Rectangle
