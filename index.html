@@ -745,7 +745,16 @@
                 alert('Please draw at least one rectangle to select OCR areas.');
                 return;
             }
-            statusMessage.textContent = 'Performing OCR... please wait.';
+
+            if (isDrawingMode) {
+                // Exit drawing mode before performing OCR
+                isDrawingMode = false;
+                drawButton.textContent = 'Draw';
+                statusMessage.textContent = 'Drawing mode exited. Performing OCR... please wait.';
+            } else {
+                statusMessage.textContent = 'Performing OCR... please wait.';
+            }
+
             clearCanvas();
             wordGroups = [];
             const textData = await runOCR(imageDataURL);
