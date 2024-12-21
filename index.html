@@ -263,7 +263,6 @@
         let isDrawingMode = false;
         let isCropMode = false;
         let isDrawing = false;
-        let isCropping = false;
         let startX = 0;
         let startY = 0;
         let currentRect = null;
@@ -274,6 +273,7 @@
         // Resize Handle Constants
         const HANDLE_SIZE = 10;
         const HANDLE_OFFSET = HANDLE_SIZE / 2;
+        const PADDING = HANDLE_OFFSET; // Padding to ensure handles are fully visible
 
         // Variables for resizing
         let isResizing = false;
@@ -374,14 +374,18 @@
             if (isCropMode) {
                 cropButton.textContent = 'Cancel Crop';
                 statusMessage.textContent = 'Crop mode activated. Adjust the crop boundary as needed.';
-                overlayCanvas.style.cursor = 'move';
-                // Automatically set cropRect to image boundaries
-                cropRect = { x: 0, y: 0, width: uploadedImage.clientWidth, height: uploadedImage.clientHeight };
+                // Automatically set cropRect with padding
+                cropRect = { 
+                    x: PADDING, 
+                    y: PADDING, 
+                    width: uploadedImage.clientWidth - 2 * PADDING, 
+                    height: uploadedImage.clientHeight - 2 * PADDING 
+                };
                 confirmCropButton.style.display = 'inline-block'; // Show Confirm Crop button
+                overlayCanvas.style.cursor = 'move';
                 // Disable drawing new rectangles
                 isDrawingMode = false;
                 drawButton.textContent = 'Draw';
-                overlayCanvas.style.cursor = 'move';
                 redrawCanvas();
             } else {
                 cropButton.textContent = 'Crop';
@@ -410,8 +414,7 @@
         // Mouse Events for Desktop Drawing and Cropping
         overlayCanvas.addEventListener('mousedown', (e) => {
             if (isResizing) return; // Prevent drawing when resizing
-            if (isDrawingMode || isCropMode) {
-                if (isCropMode && !isResizing) return; // Prevent drawing when in crop mode
+            if (isDrawingMode) {
                 isDrawing = true;
                 const rect = overlayCanvas.getBoundingClientRect();
                 startX = (e.clientX - rect.left);
@@ -425,21 +428,19 @@
                 handleResizing(e);
                 return;
             }
-            if (isDrawingMode || isCropMode) {
+            if (isDrawingMode) {
                 if (!isDrawing) {
                     // Change cursor based on hover over handles or rectangles
                     const rect = overlayCanvas.getBoundingClientRect();
                     const mouseX = e.clientX - rect.left;
                     const mouseY = e.clientY - rect.top;
                     const handle = getHandleAt(mouseX, mouseY);
-                    if (handle && isCropMode) {
-                        overlayCanvas.style.cursor = handle.cursor;
-                    } else if (handle && isDrawingMode) {
+                    if (handle && !isCropMode) {
                         overlayCanvas.style.cursor = handle.cursor;
                     } else if (!isCropMode && getRectangleAt(mouseX, mouseY) !== -1) {
                         overlayCanvas.style.cursor = 'pointer';
                     } else {
-                        overlayCanvas.style.cursor = isDrawingMode || isCropMode ? 'crosshair' : 'default';
+                        overlayCanvas.style.cursor = isDrawingMode ? 'crosshair' : 'default';
                     }
                     return;
                 }
@@ -477,20 +478,14 @@
                 currentHandle = null;
                 return;
             }
-            if (isDrawingMode || isCropMode) {
+            if (isDrawingMode) {
                 if (!isDrawing) return;
                 isDrawing = false;
                 if (currentRect.width !== 0 && currentRect.height !== 0) {
                     // Normalize rectangle dimensions
                     const normalizedRect = normalizeRect(currentRect);
-                    if (isCropMode) {
-                        cropRect = normalizedRect;
-                        statusMessage.textContent = 'Crop area set. Click "Confirm Crop" to apply.';
-                        confirmCropButton.style.display = 'inline-block';
-                    } else {
-                        rectangles.push(normalizedRect);
-                        statusMessage.textContent = `${rectangles.length} rectangle(s) drawn.`;
-                    }
+                    rectangles.push(normalizedRect);
+                    statusMessage.textContent = `${rectangles.length} rectangle(s) drawn.`;
                 }
                 currentRect = null;
                 redrawCanvas();
@@ -500,10 +495,9 @@
         // Touch Events for Mobile Drawing and Cropping
         overlayCanvas.addEventListener('touchstart', (e) => {
             if (isResizing) return; // Prevent drawing when resizing
-            if (isDrawingMode || isCropMode) {
+            if (isDrawingMode) {
                 e.preventDefault(); // Prevent scrolling
                 if (e.touches.length !== 1) return; // Only single touch
-                if (isCropMode && !isResizing) return; // Prevent drawing when in crop mode
                 isDrawing = true;
                 const touch = e.touches[0];
                 const rect = overlayCanvas.getBoundingClientRect();
@@ -518,10 +512,9 @@
                 handleResizingTouch(e);
                 return;
             }
-            if (isDrawingMode || isCropMode) {
+            if (isDrawingMode) {
                 e.preventDefault(); // Prevent scrolling
                 if (e.touches.length !== 1) return; // Only single touch
-                if (isCropMode && !isResizing) return; // Prevent drawing when in crop mode
                 if (!isDrawing) return;
                 const touch = e.touches[0];
                 const rect = overlayCanvas.getBoundingClientRect();
@@ -545,20 +538,14 @@
                 currentHandle = null;
                 return;
             }
-            if (isDrawingMode || isCropMode) {
+            if (isDrawingMode) {
                 if (!isDrawing) return;
                 isDrawing = false;
                 if (currentRect.width !== 0 && currentRect.height !== 0) {
                     // Normalize rectangle dimensions
                     const normalizedRect = normalizeRect(currentRect);
-                    if (isCropMode) {
-                        cropRect = normalizedRect;
-                        statusMessage.textContent = 'Crop area set. Click "Confirm Crop" to apply.';
-                        confirmCropButton.style.display = 'inline-block';
-                    } else {
-                        rectangles.push(normalizedRect);
-                        statusMessage.textContent = `${rectangles.length} rectangle(s) drawn.`;
-                    }
+                    rectangles.push(normalizedRect);
+                    statusMessage.textContent = `${rectangles.length} rectangle(s) drawn.`;
                 }
                 currentRect = null;
                 redrawCanvas();
@@ -877,6 +864,9 @@
             // Normalize the rectangle to prevent negative widths/heights
             newRect = normalizeRect(newRect);
 
+            // Constrain the rectangle within the canvas boundaries with padding
+            newRect = constrainRect(newRect);
+
             // Update the rectangle
             if (currentResizeRectIndex === 'crop') {
                 cropRect = newRect;
@@ -952,6 +942,9 @@
             // Normalize the rectangle to prevent negative widths/heights
             newRect = normalizeRect(newRect);
 
+            // Constrain the rectangle within the canvas boundaries with padding
+            newRect = constrainRect(newRect);
+
             // Update the rectangle
             if (currentResizeRectIndex === 'crop') {
                 cropRect = newRect;
@@ -981,6 +974,428 @@
                 height = Math.abs(height);
             }
             return { x, y, width, height };
+        }
+
+        // Function to Constrain Rectangle within Canvas with Padding
+        function constrainRect(rect) {
+            const maxX = uploadedImage.clientWidth - PADDING;
+            const maxY = uploadedImage.clientHeight - PADDING;
+
+            // Constrain x and y
+            rect.x = Math.max(PADDING, rect.x);
+            rect.y = Math.max(PADDING, rect.y);
+
+            // Constrain width and height
+            rect.width = Math.min(rect.width, maxX - rect.x);
+            rect.height = Math.min(rect.height, maxY - rect.y);
+
+            return rect;
+        }
+
+        // Function to Run OCR using Tesseract.js
+        async function runOCR(dataURL) {
+            const worker = await Tesseract.createWorker({
+                logger: m => console.log(m)
+            });
+            await worker.loadLanguage('eng');
+            await worker.initialize('eng');
+            const { data } = await worker.recognize(dataURL);
+            await worker.terminate();
+            return data;
+        }
+
+        // Function to Process OCR Data and Group Words within Rectangles
+        function processOCRData(data) {
+            if (!data.words) return;
+
+            // For each OCR rectangle, find words within it
+            rectangles.forEach((rect, index) => {
+                const wordsInRect = data.words.filter(word => {
+                    const scaleX = uploadedImage.clientWidth / uploadedImage.naturalWidth;
+                    const scaleY = uploadedImage.clientHeight / uploadedImage.naturalHeight;
+                    const wordX = word.bbox.x0 * scaleX;
+                    const wordY = word.bbox.y0 * scaleY;
+                    const wordW = (word.bbox.x1 - word.bbox.x0) * scaleX;
+                    const wordH = (word.bbox.y1 - word.bbox.y0) * scaleY;
+                    return (
+                        wordX >= rect.x &&
+                        wordY >= rect.y &&
+                        (wordX + wordW) <= (rect.x + rect.width) &&
+                        (wordY + wordH) <= (rect.y + rect.height)
+                    );
+                });
+
+                if (wordsInRect.length > 0) {
+                    // Concatenate words to form a single string
+                    const sortedWords = wordsInRect.sort((a, b) => {
+                        if (a.bbox.y0 === b.bbox.y0) {
+                            return a.bbox.x0 - b.bbox.x0;
+                        }
+                        return a.bbox.y0 - b.bbox.y0;
+                    });
+                    const concatenatedText = sortedWords.map(w => w.text).join(' ');
+
+                    // Calculate the bounding box that encompasses all words
+                    const x0 = Math.min(...wordsInRect.map(w => w.bbox.x0));
+                    const y0 = Math.min(...wordsInRect.map(w => w.bbox.y0));
+                    const x1 = Math.max(...wordsInRect.map(w => w.bbox.x1));
+                    const y1 = Math.max(...wordsInRect.map(w => w.bbox.y1));
+
+                    const scaleX = uploadedImage.clientWidth / uploadedImage.naturalWidth;
+                    const scaleY = uploadedImage.clientHeight / uploadedImage.naturalHeight;
+
+                    const groupRect = {
+                        x: x0 * scaleX,
+                        y: y0 * scaleY,
+                        width: (x1 - x0) * scaleX,
+                        height: (y1 - y0) * scaleY,
+                        text: concatenatedText
+                    };
+
+                    wordGroups.push(groupRect);
+                }
+            });
+
+            // Remove null entries
+            wordGroups = wordGroups.filter(group => group !== null);
+        }
+
+        // Function to Draw Word Groups
+        function drawWordGroups() {
+            redrawCanvas();
+        }
+
+        // Function to Assign Group Text to a Field
+        function assignGroupToField(text) {
+            const choice = prompt(
+                `Choose a field to assign this text:\n` +
+                `1) Item Name Short\n` +
+                `2) Item Name Long\n` +
+                `3) UPC\n` +
+                `4) Location\n` +
+                `5) Downstack\n` +
+                `6) Notes\n\n` +
+                `Enter a number 1-6:`
+            );
+            if (!choice) return; // User canceled
+            const num = parseInt(choice, 10);
+            if (isNaN(num) || num < 1 || num > 6) {
+                alert('Invalid choice.');
+                return;
+            }
+
+            let targetField;
+            switch (num) {
+                case 1: targetField = field1; break;
+                case 2: targetField = field2; break;
+                case 3: targetField = field3; break;
+                case 4: targetField = field4; break;
+                case 5: targetField = field5; break;
+                case 6: targetField = field6; break;
+            }
+
+            targetField.value = text;
+        }
+
+        // Function to Perform Crop
+        function performCrop(cropRect) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            const scaleX = uploadedImage.naturalWidth / uploadedImage.clientWidth;
+            const scaleY = uploadedImage.naturalHeight / uploadedImage.clientHeight;
+
+            canvas.width = cropRect.width * scaleX;
+            canvas.height = cropRect.height * scaleY;
+
+            ctx.drawImage(
+                uploadedImage,
+                cropRect.x * scaleX,
+                cropRect.y * scaleY,
+                cropRect.width * scaleX,
+                cropRect.height * scaleY,
+                0,
+                0,
+                cropRect.width * scaleX,
+                cropRect.height * scaleY
+            );
+
+            const croppedDataURL = canvas.toDataURL();
+
+            uploadedImage.src = croppedDataURL;
+            imageDataURL = croppedDataURL;
+
+            adjustCanvas();
+
+            // Clear existing rectangles and wordGroups
+            rectangles = [];
+            wordGroups = [];
+            cropRect = null;
+            confirmCropButton.style.display = 'none';
+            statusMessage.textContent = 'Image cropped. You can now perform OCR on the cropped image.';
+            redrawCanvas();
+        }
+
+        // Function to Constrain Rectangle within Canvas with Padding
+        function constrainRect(rect) {
+            const maxX = uploadedImage.clientWidth - PADDING;
+            const maxY = uploadedImage.clientHeight - PADDING;
+
+            // Constrain x and y
+            rect.x = Math.max(PADDING, rect.x);
+            rect.y = Math.max(PADDING, rect.y);
+
+            // Constrain width and height
+            rect.width = Math.min(rect.width, maxX - rect.x);
+            rect.height = Math.min(rect.height, maxY - rect.y);
+
+            return rect;
+        }
+
+        // Function to Handle Resizing Start
+        function startResizing(e, handle) {
+            isResizing = true;
+            currentResizeRectIndex = handle.rectIndex;
+            currentHandle = handle.type;
+            resizeStartX = e.clientX ? (e.clientX - overlayCanvas.getBoundingClientRect().left) : (e.touches[0].clientX - overlayCanvas.getBoundingClientRect().left);
+            resizeStartY = e.clientY ? (e.clientY - overlayCanvas.getBoundingClientRect().top) : (e.touches[0].clientY - overlayCanvas.getBoundingClientRect().top);
+            if (handle.rectIndex === 'crop') {
+                originalRect = { ...cropRect };
+            } else {
+                originalRect = { ...rectangles[currentResizeRectIndex] };
+            }
+        }
+
+        // Modify touchstart and mousedown to handle resizing
+        overlayCanvas.addEventListener('mousedown', (e) => {
+            if (isDrawingMode || isCropMode) return;
+            if (isResizing) return;
+            const rect = overlayCanvas.getBoundingClientRect();
+            const mouseX = (e.clientX - rect.left);
+            const mouseY = (e.clientY - rect.top);
+
+            const handle = getHandleAt(mouseX, mouseY);
+            if (handle) {
+                startResizing(e, handle);
+            }
+        });
+
+        overlayCanvas.addEventListener('touchstart', (e) => {
+            if (isDrawingMode || isCropMode) return;
+            if (isResizing) return;
+            e.preventDefault(); // Prevent scrolling
+            if (e.touches.length !== 1) return; // Only single touch
+
+            const touch = e.touches[0];
+            const rect = overlayCanvas.getBoundingClientRect();
+            const touchX = (touch.clientX - rect.left);
+            const touchY = (touch.clientY - rect.top);
+
+            const handle = getHandleAt(touchX, touchY);
+            if (handle) {
+                startResizing(e, handle);
+            }
+        }, { passive: false });
+
+        // Attach move event listeners for resizing
+        overlayCanvas.addEventListener('mousemove', handleResizing);
+        overlayCanvas.addEventListener('touchmove', handleResizingTouch, { passive: false });
+
+        // Function to Handle Resizing Movement
+        function handleResizingMove(e) {
+            if (!isResizing) return;
+            handleResizing(e);
+        }
+
+        // Function to Handle Resizing Movement for Touch
+        function handleResizingMoveTouch(e) {
+            if (!isResizing) return;
+            handleResizingTouch(e);
+        }
+
+        // Function to Handle Resizing with Mouse
+        function handleResizing(e) {
+            if (!isResizing) return;
+            const rect = overlayCanvas.getBoundingClientRect();
+            const mouseX = (e.clientX - rect.left);
+            const mouseY = (e.clientY - rect.top);
+
+            const deltaX = mouseX - resizeStartX;
+            const deltaY = mouseY - resizeStartY;
+
+            let newRect;
+            if (currentResizeRectIndex === 'crop') {
+                newRect = { ...cropRect };
+            } else {
+                newRect = { ...rectangles[currentResizeRectIndex] };
+            }
+
+            switch (currentHandle) {
+                case 'nw':
+                    newRect.x += deltaX;
+                    newRect.y += deltaY;
+                    newRect.width -= deltaX;
+                    newRect.height -= deltaY;
+                    break;
+                case 'n':
+                    newRect.y += deltaY;
+                    newRect.height -= deltaY;
+                    break;
+                case 'ne':
+                    newRect.y += deltaY;
+                    newRect.width += deltaX;
+                    newRect.height -= deltaY;
+                    break;
+                case 'e':
+                    newRect.width += deltaX;
+                    break;
+                case 'se':
+                    newRect.width += deltaX;
+                    newRect.height += deltaY;
+                    break;
+                case 's':
+                    newRect.height += deltaY;
+                    break;
+                case 'sw':
+                    newRect.x += deltaX;
+                    newRect.width -= deltaX;
+                    newRect.height += deltaY;
+                    break;
+                case 'w':
+                    newRect.x += deltaX;
+                    newRect.width -= deltaX;
+                    break;
+            }
+
+            // Normalize the rectangle to prevent negative widths/heights
+            newRect = normalizeRect(newRect);
+
+            // Constrain the rectangle within the canvas boundaries with padding
+            newRect = constrainRect(newRect);
+
+            // Update the rectangle
+            if (currentResizeRectIndex === 'crop') {
+                cropRect = newRect;
+                // Show Confirm Crop button to apply the crop
+                confirmCropButton.style.display = 'inline-block';
+            } else {
+                rectangles[currentResizeRectIndex] = newRect;
+            }
+
+            // Update resize start positions
+            resizeStartX = mouseX;
+            resizeStartY = mouseY;
+
+            // Redraw canvas
+            redrawCanvas();
+        }
+
+        // Function to Handle Resizing with Touch
+        function handleResizingTouch(e) {
+            if (!isResizing) return;
+            const touch = e.touches[0];
+            const rect = overlayCanvas.getBoundingClientRect();
+            const touchX = (touch.clientX - rect.left);
+            const touchY = (touch.clientY - rect.top);
+
+            const deltaX = touchX - resizeStartX;
+            const deltaY = touchY - resizeStartY;
+
+            let newRect;
+            if (currentResizeRectIndex === 'crop') {
+                newRect = { ...cropRect };
+            } else {
+                newRect = { ...rectangles[currentResizeRectIndex] };
+            }
+
+            switch (currentHandle) {
+                case 'nw':
+                    newRect.x += deltaX;
+                    newRect.y += deltaY;
+                    newRect.width -= deltaX;
+                    newRect.height -= deltaY;
+                    break;
+                case 'n':
+                    newRect.y += deltaY;
+                    newRect.height -= deltaY;
+                    break;
+                case 'ne':
+                    newRect.y += deltaY;
+                    newRect.width += deltaX;
+                    newRect.height -= deltaY;
+                    break;
+                case 'e':
+                    newRect.width += deltaX;
+                    break;
+                case 'se':
+                    newRect.width += deltaX;
+                    newRect.height += deltaY;
+                    break;
+                case 's':
+                    newRect.height += deltaY;
+                    break;
+                case 'sw':
+                    newRect.x += deltaX;
+                    newRect.width -= deltaX;
+                    newRect.height += deltaY;
+                    break;
+                case 'w':
+                    newRect.x += deltaX;
+                    newRect.width -= deltaX;
+                    break;
+            }
+
+            // Normalize the rectangle to prevent negative widths/heights
+            newRect = normalizeRect(newRect);
+
+            // Constrain the rectangle within the canvas boundaries with padding
+            newRect = constrainRect(newRect);
+
+            // Update the rectangle
+            if (currentResizeRectIndex === 'crop') {
+                cropRect = newRect;
+                // Show Confirm Crop button to apply the crop
+                confirmCropButton.style.display = 'inline-block';
+            } else {
+                rectangles[currentResizeRectIndex] = newRect;
+            }
+
+            // Update resize start positions
+            resizeStartX = touchX;
+            resizeStartY = touchY;
+
+            // Redraw canvas
+            redrawCanvas();
+        }
+
+        // Function to Normalize Rectangle (handles negative width/height)
+        function normalizeRect(rect) {
+            let { x, y, width, height } = rect;
+            if (width < 0) {
+                x += width;
+                width = Math.abs(width);
+            }
+            if (height < 0) {
+                y += height;
+                height = Math.abs(height);
+            }
+            return { x, y, width, height };
+        }
+
+        // Function to Constrain Rectangle within Canvas with Padding
+        function constrainRect(rect) {
+            const maxX = uploadedImage.clientWidth - PADDING;
+            const maxY = uploadedImage.clientHeight - PADDING;
+
+            // Constrain x and y
+            rect.x = Math.max(PADDING, rect.x);
+            rect.y = Math.max(PADDING, rect.y);
+
+            // Constrain width and height
+            rect.width = Math.min(rect.width, maxX - rect.x);
+            rect.height = Math.min(rect.height, maxY - rect.y);
+
+            return rect;
         }
 
         // Function to Run OCR using Tesseract.js
@@ -1172,9 +1587,661 @@
             }
         }, { passive: false });
 
-        // Attach move event listeners for resizing
-        overlayCanvas.addEventListener('mousemove', handleResizing);
-        overlayCanvas.addEventListener('touchmove', handleResizingTouch, { passive: false });
+        // Function to Handle Resizing Movement
+        function handleResizing(e) {
+            if (!isResizing) return;
+            const rect = overlayCanvas.getBoundingClientRect();
+            const mouseX = (e.clientX - rect.left);
+            const mouseY = (e.clientY - rect.top);
+
+            const deltaX = mouseX - resizeStartX;
+            const deltaY = mouseY - resizeStartY;
+
+            let newRect;
+            if (currentResizeRectIndex === 'crop') {
+                newRect = { ...cropRect };
+            } else {
+                newRect = { ...rectangles[currentResizeRectIndex] };
+            }
+
+            switch (currentHandle) {
+                case 'nw':
+                    newRect.x += deltaX;
+                    newRect.y += deltaY;
+                    newRect.width -= deltaX;
+                    newRect.height -= deltaY;
+                    break;
+                case 'n':
+                    newRect.y += deltaY;
+                    newRect.height -= deltaY;
+                    break;
+                case 'ne':
+                    newRect.y += deltaY;
+                    newRect.width += deltaX;
+                    newRect.height -= deltaY;
+                    break;
+                case 'e':
+                    newRect.width += deltaX;
+                    break;
+                case 'se':
+                    newRect.width += deltaX;
+                    newRect.height += deltaY;
+                    break;
+                case 's':
+                    newRect.height += deltaY;
+                    break;
+                case 'sw':
+                    newRect.x += deltaX;
+                    newRect.width -= deltaX;
+                    newRect.height += deltaY;
+                    break;
+                case 'w':
+                    newRect.x += deltaX;
+                    newRect.width -= deltaX;
+                    break;
+            }
+
+            // Normalize the rectangle to prevent negative widths/heights
+            newRect = normalizeRect(newRect);
+
+            // Constrain the rectangle within the canvas boundaries with padding
+            newRect = constrainRect(newRect);
+
+            // Update the rectangle
+            if (currentResizeRectIndex === 'crop') {
+                cropRect = newRect;
+                // Show Confirm Crop button to apply the crop
+                confirmCropButton.style.display = 'inline-block';
+            } else {
+                rectangles[currentResizeRectIndex] = newRect;
+            }
+
+            // Update resize start positions
+            resizeStartX = mouseX;
+            resizeStartY = mouseY;
+
+            // Redraw canvas
+            redrawCanvas();
+        }
+
+        // Function to Handle Resizing Movement for Touch
+        function handleResizingTouch(e) {
+            if (!isResizing) return;
+            const touch = e.touches[0];
+            const rect = overlayCanvas.getBoundingClientRect();
+            const touchX = (touch.clientX - rect.left);
+            const touchY = (touch.clientY - rect.top);
+
+            const deltaX = touchX - resizeStartX;
+            const deltaY = touchY - resizeStartY;
+
+            let newRect;
+            if (currentResizeRectIndex === 'crop') {
+                newRect = { ...cropRect };
+            } else {
+                newRect = { ...rectangles[currentResizeRectIndex] };
+            }
+
+            switch (currentHandle) {
+                case 'nw':
+                    newRect.x += deltaX;
+                    newRect.y += deltaY;
+                    newRect.width -= deltaX;
+                    newRect.height -= deltaY;
+                    break;
+                case 'n':
+                    newRect.y += deltaY;
+                    newRect.height -= deltaY;
+                    break;
+                case 'ne':
+                    newRect.y += deltaY;
+                    newRect.width += deltaX;
+                    newRect.height -= deltaY;
+                    break;
+                case 'e':
+                    newRect.width += deltaX;
+                    break;
+                case 'se':
+                    newRect.width += deltaX;
+                    newRect.height += deltaY;
+                    break;
+                case 's':
+                    newRect.height += deltaY;
+                    break;
+                case 'sw':
+                    newRect.x += deltaX;
+                    newRect.width -= deltaX;
+                    newRect.height += deltaY;
+                    break;
+                case 'w':
+                    newRect.x += deltaX;
+                    newRect.width -= deltaX;
+                    break;
+            }
+
+            // Normalize the rectangle to prevent negative widths/heights
+            newRect = normalizeRect(newRect);
+
+            // Constrain the rectangle within the canvas boundaries with padding
+            newRect = constrainRect(newRect);
+
+            // Update the rectangle
+            if (currentResizeRectIndex === 'crop') {
+                cropRect = newRect;
+                // Show Confirm Crop button to apply the crop
+                confirmCropButton.style.display = 'inline-block';
+            } else {
+                rectangles[currentResizeRectIndex] = newRect;
+            }
+
+            // Update resize start positions
+            resizeStartX = touchX;
+            resizeStartY = touchY;
+
+            // Redraw canvas
+            redrawCanvas();
+        }
+
+        // Function to Run OCR using Tesseract.js
+        async function runOCR(dataURL) {
+            const worker = await Tesseract.createWorker({
+                logger: m => console.log(m)
+            });
+            await worker.loadLanguage('eng');
+            await worker.initialize('eng');
+            const { data } = await worker.recognize(dataURL);
+            await worker.terminate();
+            return data;
+        }
+
+        // Function to Process OCR Data and Group Words within Rectangles
+        function processOCRData(data) {
+            if (!data.words) return;
+
+            // For each OCR rectangle, find words within it
+            rectangles.forEach((rect, index) => {
+                const wordsInRect = data.words.filter(word => {
+                    const scaleX = uploadedImage.clientWidth / uploadedImage.naturalWidth;
+                    const scaleY = uploadedImage.clientHeight / uploadedImage.naturalHeight;
+                    const wordX = word.bbox.x0 * scaleX;
+                    const wordY = word.bbox.y0 * scaleY;
+                    const wordW = (word.bbox.x1 - word.bbox.x0) * scaleX;
+                    const wordH = (word.bbox.y1 - word.bbox.y0) * scaleY;
+                    return (
+                        wordX >= rect.x &&
+                        wordY >= rect.y &&
+                        (wordX + wordW) <= (rect.x + rect.width) &&
+                        (wordY + wordH) <= (rect.y + rect.height)
+                    );
+                });
+
+                if (wordsInRect.length > 0) {
+                    // Concatenate words to form a single string
+                    const sortedWords = wordsInRect.sort((a, b) => {
+                        if (a.bbox.y0 === b.bbox.y0) {
+                            return a.bbox.x0 - b.bbox.x0;
+                        }
+                        return a.bbox.y0 - b.bbox.y0;
+                    });
+                    const concatenatedText = sortedWords.map(w => w.text).join(' ');
+
+                    // Calculate the bounding box that encompasses all words
+                    const x0 = Math.min(...wordsInRect.map(w => w.bbox.x0));
+                    const y0 = Math.min(...wordsInRect.map(w => w.bbox.y0));
+                    const x1 = Math.max(...wordsInRect.map(w => w.bbox.x1));
+                    const y1 = Math.max(...wordsInRect.map(w => w.bbox.y1));
+
+                    const scaleX = uploadedImage.clientWidth / uploadedImage.naturalWidth;
+                    const scaleY = uploadedImage.clientHeight / uploadedImage.naturalHeight;
+
+                    const groupRect = {
+                        x: x0 * scaleX,
+                        y: y0 * scaleY,
+                        width: (x1 - x0) * scaleX,
+                        height: (y1 - y0) * scaleY,
+                        text: concatenatedText
+                    };
+
+                    wordGroups.push(groupRect);
+                }
+            });
+
+            // Remove null entries
+            wordGroups = wordGroups.filter(group => group !== null);
+        }
+
+        // Function to Draw Word Groups
+        function drawWordGroups() {
+            redrawCanvas();
+        }
+
+        // Function to Assign Group Text to a Field
+        function assignGroupToField(text) {
+            const choice = prompt(
+                `Choose a field to assign this text:\n` +
+                `1) Item Name Short\n` +
+                `2) Item Name Long\n` +
+                `3) UPC\n` +
+                `4) Location\n` +
+                `5) Downstack\n` +
+                `6) Notes\n\n` +
+                `Enter a number 1-6:`
+            );
+            if (!choice) return; // User canceled
+            const num = parseInt(choice, 10);
+            if (isNaN(num) || num < 1 || num > 6) {
+                alert('Invalid choice.');
+                return;
+            }
+
+            let targetField;
+            switch (num) {
+                case 1: targetField = field1; break;
+                case 2: targetField = field2; break;
+                case 3: targetField = field3; break;
+                case 4: targetField = field4; break;
+                case 5: targetField = field5; break;
+                case 6: targetField = field6; break;
+            }
+
+            targetField.value = text;
+        }
+
+        // Function to Perform Crop
+        function performCrop(cropRect) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            const scaleX = uploadedImage.naturalWidth / uploadedImage.clientWidth;
+            const scaleY = uploadedImage.naturalHeight / uploadedImage.clientHeight;
+
+            canvas.width = cropRect.width * scaleX;
+            canvas.height = cropRect.height * scaleY;
+
+            ctx.drawImage(
+                uploadedImage,
+                cropRect.x * scaleX,
+                cropRect.y * scaleY,
+                cropRect.width * scaleX,
+                cropRect.height * scaleY,
+                0,
+                0,
+                cropRect.width * scaleX,
+                cropRect.height * scaleY
+            );
+
+            const croppedDataURL = canvas.toDataURL();
+
+            uploadedImage.src = croppedDataURL;
+            imageDataURL = croppedDataURL;
+
+            adjustCanvas();
+
+            // Clear existing rectangles and wordGroups
+            rectangles = [];
+            wordGroups = [];
+            cropRect = null;
+            confirmCropButton.style.display = 'none';
+            statusMessage.textContent = 'Image cropped. You can now perform OCR on the cropped image.';
+            redrawCanvas();
+        }
+
+        // Function to Handle Resizing Start
+        function startResizing(e, handle) {
+            isResizing = true;
+            currentResizeRectIndex = handle.rectIndex;
+            currentHandle = handle.type;
+            resizeStartX = e.clientX ? (e.clientX - overlayCanvas.getBoundingClientRect().left) : (e.touches[0].clientX - overlayCanvas.getBoundingClientRect().left);
+            resizeStartY = e.clientY ? (e.clientY - overlayCanvas.getBoundingClientRect().top) : (e.touches[0].clientY - overlayCanvas.getBoundingClientRect().top);
+            if (handle.rectIndex === 'crop') {
+                originalRect = { ...cropRect };
+            } else {
+                originalRect = { ...rectangles[currentResizeRectIndex] };
+            }
+        }
+
+        // Function to Handle Resizing with Mouse
+        function handleResizing(e) {
+            if (!isResizing) return;
+            const rect = overlayCanvas.getBoundingClientRect();
+            const mouseX = (e.clientX - rect.left);
+            const mouseY = (e.clientY - rect.top);
+
+            const deltaX = mouseX - resizeStartX;
+            const deltaY = mouseY - resizeStartY;
+
+            let newRect;
+            if (currentResizeRectIndex === 'crop') {
+                newRect = { ...cropRect };
+            } else {
+                newRect = { ...rectangles[currentResizeRectIndex] };
+            }
+
+            switch (currentHandle) {
+                case 'nw':
+                    newRect.x += deltaX;
+                    newRect.y += deltaY;
+                    newRect.width -= deltaX;
+                    newRect.height -= deltaY;
+                    break;
+                case 'n':
+                    newRect.y += deltaY;
+                    newRect.height -= deltaY;
+                    break;
+                case 'ne':
+                    newRect.y += deltaY;
+                    newRect.width += deltaX;
+                    newRect.height -= deltaY;
+                    break;
+                case 'e':
+                    newRect.width += deltaX;
+                    break;
+                case 'se':
+                    newRect.width += deltaX;
+                    newRect.height += deltaY;
+                    break;
+                case 's':
+                    newRect.height += deltaY;
+                    break;
+                case 'sw':
+                    newRect.x += deltaX;
+                    newRect.width -= deltaX;
+                    newRect.height += deltaY;
+                    break;
+                case 'w':
+                    newRect.x += deltaX;
+                    newRect.width -= deltaX;
+                    break;
+            }
+
+            // Normalize the rectangle to prevent negative widths/heights
+            newRect = normalizeRect(newRect);
+
+            // Constrain the rectangle within the canvas boundaries with padding
+            newRect = constrainRect(newRect);
+
+            // Update the rectangle
+            if (currentResizeRectIndex === 'crop') {
+                cropRect = newRect;
+                // Show Confirm Crop button to apply the crop
+                confirmCropButton.style.display = 'inline-block';
+            } else {
+                rectangles[currentResizeRectIndex] = newRect;
+            }
+
+            // Update resize start positions
+            resizeStartX = mouseX;
+            resizeStartY = mouseY;
+
+            // Redraw canvas
+            redrawCanvas();
+        }
+
+        // Function to Handle Resizing with Touch
+        function handleResizingTouch(e) {
+            if (!isResizing) return;
+            const touch = e.touches[0];
+            const rect = overlayCanvas.getBoundingClientRect();
+            const touchX = (touch.clientX - rect.left);
+            const touchY = (touch.clientY - rect.top);
+
+            const deltaX = touchX - resizeStartX;
+            const deltaY = touchY - resizeStartY;
+
+            let newRect;
+            if (currentResizeRectIndex === 'crop') {
+                newRect = { ...cropRect };
+            } else {
+                newRect = { ...rectangles[currentResizeRectIndex] };
+            }
+
+            switch (currentHandle) {
+                case 'nw':
+                    newRect.x += deltaX;
+                    newRect.y += deltaY;
+                    newRect.width -= deltaX;
+                    newRect.height -= deltaY;
+                    break;
+                case 'n':
+                    newRect.y += deltaY;
+                    newRect.height -= deltaY;
+                    break;
+                case 'ne':
+                    newRect.y += deltaY;
+                    newRect.width += deltaX;
+                    newRect.height -= deltaY;
+                    break;
+                case 'e':
+                    newRect.width += deltaX;
+                    break;
+                case 'se':
+                    newRect.width += deltaX;
+                    newRect.height += deltaY;
+                    break;
+                case 's':
+                    newRect.height += deltaY;
+                    break;
+                case 'sw':
+                    newRect.x += deltaX;
+                    newRect.width -= deltaX;
+                    newRect.height += deltaY;
+                    break;
+                case 'w':
+                    newRect.x += deltaX;
+                    newRect.width -= deltaX;
+                    break;
+            }
+
+            // Normalize the rectangle to prevent negative widths/heights
+            newRect = normalizeRect(newRect);
+
+            // Constrain the rectangle within the canvas boundaries with padding
+            newRect = constrainRect(newRect);
+
+            // Update the rectangle
+            if (currentResizeRectIndex === 'crop') {
+                cropRect = newRect;
+                // Show Confirm Crop button to apply the crop
+                confirmCropButton.style.display = 'inline-block';
+            } else {
+                rectangles[currentResizeRectIndex] = newRect;
+            }
+
+            // Update resize start positions
+            resizeStartX = touchX;
+            resizeStartY = touchY;
+
+            // Redraw canvas
+            redrawCanvas();
+        }
+
+        // Function to Constrain Rectangle within Canvas with Padding
+        function constrainRect(rect) {
+            const maxX = uploadedImage.clientWidth - PADDING;
+            const maxY = uploadedImage.clientHeight - PADDING;
+
+            // Constrain x and y
+            rect.x = Math.max(PADDING, rect.x);
+            rect.y = Math.max(PADDING, rect.y);
+
+            // Constrain width and height
+            rect.width = Math.min(rect.width, maxX - rect.x);
+            rect.height = Math.min(rect.height, maxY - rect.y);
+
+            return rect;
+        }
+
+        // Function to Normalize Rectangle (handles negative width/height)
+        function normalizeRect(rect) {
+            let { x, y, width, height } = rect;
+            if (width < 0) {
+                x += width;
+                width = Math.abs(width);
+            }
+            if (height < 0) {
+                y += height;
+                height = Math.abs(height);
+            }
+            return { x, y, width, height };
+        }
+
+        // Function to Run OCR using Tesseract.js
+        async function runOCR(dataURL) {
+            const worker = await Tesseract.createWorker({
+                logger: m => console.log(m)
+            });
+            await worker.loadLanguage('eng');
+            await worker.initialize('eng');
+            const { data } = await worker.recognize(dataURL);
+            await worker.terminate();
+            return data;
+        }
+
+        // Function to Process OCR Data and Group Words within Rectangles
+        function processOCRData(data) {
+            if (!data.words) return;
+
+            // For each OCR rectangle, find words within it
+            rectangles.forEach((rect, index) => {
+                const wordsInRect = data.words.filter(word => {
+                    const scaleX = uploadedImage.clientWidth / uploadedImage.naturalWidth;
+                    const scaleY = uploadedImage.clientHeight / uploadedImage.naturalHeight;
+                    const wordX = word.bbox.x0 * scaleX;
+                    const wordY = word.bbox.y0 * scaleY;
+                    const wordW = (word.bbox.x1 - word.bbox.x0) * scaleX;
+                    const wordH = (word.bbox.y1 - word.bbox.y0) * scaleY;
+                    return (
+                        wordX >= rect.x &&
+                        wordY >= rect.y &&
+                        (wordX + wordW) <= (rect.x + rect.width) &&
+                        (wordY + wordH) <= (rect.y + rect.height)
+                    );
+                });
+
+                if (wordsInRect.length > 0) {
+                    // Concatenate words to form a single string
+                    const sortedWords = wordsInRect.sort((a, b) => {
+                        if (a.bbox.y0 === b.bbox.y0) {
+                            return a.bbox.x0 - b.bbox.x0;
+                        }
+                        return a.bbox.y0 - b.bbox.y0;
+                    });
+                    const concatenatedText = sortedWords.map(w => w.text).join(' ');
+
+                    // Calculate the bounding box that encompasses all words
+                    const x0 = Math.min(...wordsInRect.map(w => w.bbox.x0));
+                    const y0 = Math.min(...wordsInRect.map(w => w.bbox.y0));
+                    const x1 = Math.max(...wordsInRect.map(w => w.bbox.x1));
+                    const y1 = Math.max(...wordsInRect.map(w => w.bbox.y1));
+
+                    const scaleX = uploadedImage.clientWidth / uploadedImage.naturalWidth;
+                    const scaleY = uploadedImage.clientHeight / uploadedImage.naturalHeight;
+
+                    const groupRect = {
+                        x: x0 * scaleX,
+                        y: y0 * scaleY,
+                        width: (x1 - x0) * scaleX,
+                        height: (y1 - y0) * scaleY,
+                        text: concatenatedText
+                    };
+
+                    wordGroups.push(groupRect);
+                }
+            });
+
+            // Remove null entries
+            wordGroups = wordGroups.filter(group => group !== null);
+        }
+
+        // Function to Draw Word Groups
+        function drawWordGroups() {
+            redrawCanvas();
+        }
+
+        // Function to Assign Group Text to a Field
+        function assignGroupToField(text) {
+            const choice = prompt(
+                `Choose a field to assign this text:\n` +
+                `1) Item Name Short\n` +
+                `2) Item Name Long\n` +
+                `3) UPC\n` +
+                `4) Location\n` +
+                `5) Downstack\n` +
+                `6) Notes\n\n` +
+                `Enter a number 1-6:`
+            );
+            if (!choice) return; // User canceled
+            const num = parseInt(choice, 10);
+            if (isNaN(num) || num < 1 || num > 6) {
+                alert('Invalid choice.');
+                return;
+            }
+
+            let targetField;
+            switch (num) {
+                case 1: targetField = field1; break;
+                case 2: targetField = field2; break;
+                case 3: targetField = field3; break;
+                case 4: targetField = field4; break;
+                case 5: targetField = field5; break;
+                case 6: targetField = field6; break;
+            }
+
+            targetField.value = text;
+        }
+
+        // Function to Perform Crop
+        function performCrop(cropRect) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            const scaleX = uploadedImage.naturalWidth / uploadedImage.clientWidth;
+            const scaleY = uploadedImage.naturalHeight / uploadedImage.clientHeight;
+
+            canvas.width = cropRect.width * scaleX;
+            canvas.height = cropRect.height * scaleY;
+
+            ctx.drawImage(
+                uploadedImage,
+                cropRect.x * scaleX,
+                cropRect.y * scaleY,
+                cropRect.width * scaleX,
+                cropRect.height * scaleY,
+                0,
+                0,
+                cropRect.width * scaleX,
+                cropRect.height * scaleY
+            );
+
+            const croppedDataURL = canvas.toDataURL();
+
+            uploadedImage.src = croppedDataURL;
+            imageDataURL = croppedDataURL;
+
+            adjustCanvas();
+
+            // Clear existing rectangles and wordGroups
+            rectangles = [];
+            wordGroups = [];
+            cropRect = null;
+            confirmCropButton.style.display = 'none';
+            statusMessage.textContent = 'Image cropped. You can now perform OCR on the cropped image.';
+            redrawCanvas();
+        }
+
+        // Function to Handle Resizing Start
+        function startResizing(e, handle) {
+            isResizing = true;
+            currentResizeRectIndex = handle.rectIndex;
+            currentHandle = handle.type;
+            resizeStartX = e.clientX ? (e.clientX - overlayCanvas.getBoundingClientRect().left) : (e.touches[0].clientX - overlayCanvas.getBoundingClientRect().left);
+            resizeStartY = e.clientY ? (e.clientY - overlayCanvas.getBoundingClientRect().top) : (e.touches[0].clientY - overlayCanvas.getBoundingClientRect().top);
+            if (handle.rectIndex === 'crop') {
+                originalRect = { ...cropRect };
+            } else {
+                originalRect = { ...rectangles[currentResizeRectIndex] };
+            }
+        }
 
         // Prevent Scrolling When Touching the Canvas in Draw/Crop Mode
         document.body.addEventListener('touchstart', function(e) {
