@@ -16,33 +16,8 @@
             color: #e0e0e0;
             overflow-y: auto;
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
             height: 100vh;
-        }
-
-        h1 {
-            font-size: 28px;
-            margin-bottom: 15px;
-            text-align: center;
-        }
-
-        p {
-            margin-bottom: 15px;
-            text-align: center;
-            max-width: 800px;
-            margin-left: auto;
-            margin-right: auto;
-            line-height: 1.5;
-        }
-
-        /* Centered Container */
-        .container {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
         }
 
         /* Side Menu Styles */
@@ -60,8 +35,14 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: space-between; /* Push joystick to the bottom */
         }
 
+        #sideMenu.active {
+            left: 0;
+        }
+
+        /* Side Menu Buttons */
         #sideMenu button {
             padding: 12px 20px;
             width: 80%;
@@ -112,9 +93,29 @@
             transition: 0.4s;
         }
 
-        /* Side Menu Active State */
-        #sideMenu.active {
-            left: 0;
+        /* Container for Main Content */
+        .container {
+            margin-left: 250px; /* Space for the side menu */
+            padding: 20px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            overflow-y: auto;
+        }
+
+        h1 {
+            font-size: 28px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        p {
+            margin-bottom: 15px;
+            text-align: center;
+            max-width: 800px;
+            line-height: 1.5;
         }
 
         /* Input Section */
@@ -221,11 +222,6 @@
             color: #e0e0e0;
         }
 
-        /* Buttons in Side Menu */
-        .buttons-container {
-            display: none; /* Hidden since moved to side menu */
-        }
-
         /* Postprocessing Controls */
         .postprocessing-controls {
             display: none;
@@ -279,10 +275,6 @@
 
         /* Joystick Slider Styles */
         #joystickContainer {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
             width: 80px;
             height: 200px;
             background-color: rgba(0, 0, 0, 0.7);
@@ -290,7 +282,6 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 1200;
         }
 
         #joystickSlider {
@@ -413,32 +404,44 @@
 
     <!-- Side Menu -->
     <div id="sideMenu">
-        <button id="draw-button" class="side-menu-button">Draw</button>
-        <button id="undo-draw-button" class="side-menu-button" style="display:none;">Undo Draw</button>
-        <button id="crop-button" class="side-menu-button">Crop</button>
-        <button id="confirm-crop-button" class="side-menu-button" style="display:none;">Confirm Crop</button>
-        <button id="perform-ocr-button" class="side-menu-button">Perform OCR</button>
-        <button id="clear-image-button" class="side-menu-button">Clear Image & Fields</button>
-        <button id="update-table-button" class="side-menu-button">Update Table</button>
-        <button id="save-csv-button" class="side-menu-button">Save CSV</button>
+        <div>
+            <button id="draw-button" class="side-menu-button">Draw</button>
+            <button id="undo-draw-button" class="side-menu-button" style="display:none;">Undo Draw</button>
+            <button id="crop-button" class="side-menu-button">Crop</button>
+            <button id="confirm-crop-button" class="side-menu-button" style="display:none;">Confirm Crop</button>
+            <button id="perform-ocr-button" class="side-menu-button">Perform OCR</button>
+            <button id="clear-image-button" class="side-menu-button">Clear Image & Fields</button>
+            <button id="update-table-button" class="side-menu-button">Update Table</button>
+            <button id="save-csv-button" class="side-menu-button">Save CSV</button>
 
-        <!-- Postprocessing Submenu -->
-        <button id="postprocessing-button" class="side-menu-button">Postprocessing</button>
-        <div class="postprocessing-controls" id="postprocessing-controls">
-            <label for="grayscale">Grayscale:</label>
-            <input type="checkbox" id="grayscale">
+            <!-- Postprocessing Submenu -->
+            <button id="postprocessing-button" class="side-menu-button">Postprocessing</button>
+            <div class="postprocessing-controls" id="postprocessing-controls">
+                <label for="grayscale">Grayscale:</label>
+                <input type="checkbox" id="grayscale">
 
-            <label for="highlight">Highlight:</label>
-            <input type="range" id="highlight" min="0" max="100" value="0">
+                <label for="highlight">Highlight:</label>
+                <input type="range" id="highlight" min="0" max="100" value="0">
 
-            <label for="clarity">Clarity:</label>
-            <input type="range" id="clarity" min="0" max="100" value="50">
+                <label for="clarity">Clarity:</label>
+                <input type="range" id="clarity" min="0" max="100" value="50">
 
-            <label for="brightness">Brightness:</label>
-            <input type="range" id="brightness" min="-100" max="100" value="0">
+                <label for="brightness">Brightness:</label>
+                <input type="range" id="brightness" min="-100" max="100" value="0">
 
-            <label for="sharpening">Sharpening:</label>
-            <input type="range" id="sharpening" min="0" max="100" value="0">
+                <label for="sharpening">Sharpening:</label>
+                <input type="range" id="sharpening" min="0" max="100" value="0">
+            </div>
+        </div>
+
+        <!-- Joystick Slider at the Bottom of Side Menu -->
+        <div id="joystickContainer" aria-label="Scroll Joystick">
+            <div id="joystickSlider">
+                <div id="joystickKnob">
+                    <div id="triangleUp" class="triangle"></div>
+                    <div id="triangleDown" class="triangle"></div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -493,15 +496,7 @@
         </tbody>
     </table>
 
-    <!-- Joystick Slider -->
-    <div id="joystickContainer" aria-label="Scroll Joystick">
-        <div id="joystickSlider">
-            <div id="joystickKnob">
-                <div id="triangleUp" class="triangle"></div>
-                <div id="triangleDown" class="triangle"></div>
-            </div>
-        </div>
-    </div>
+    <!-- Joystick Slider is now inside the Side Menu -->
 
     <script>
         // DOM Elements
@@ -1680,7 +1675,6 @@
         });
 
         /* -------------------- End of Joystick Scroll Functions -------------------- */
-
     </script>
 </body>
 </html>
