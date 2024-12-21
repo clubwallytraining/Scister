@@ -386,8 +386,8 @@
 
         /* Highlighted Rectangle Style */
         .highlighted-rect {
-            border: 2px solid lightblue;
-            background-color: rgba(173, 216, 230, 0.3); /* LightBlue with transparency */
+            border: 2px solid #00FFFF; /* Cyan */
+            background-color: rgba(0, 255, 255, 0.3); /* Cyan with transparency */
             cursor: pointer;
         }
 
@@ -479,7 +479,7 @@
 
     <div class="container">
         <h1>OCR Image Processor</h1>
-        <p>Upload an image and perform OCR. Use the side menu to select specific areas for OCR or to crop the image. After drawing a crop rectangle, click "Confirm Crop" to apply the crop. Recognized words within drawn rectangles will be highlighted in light blue on the image. Click on a highlighted block to assign the extracted text to one of the input fields. Once done, press "Update Table" to add a row to the table. Process multiple images by clearing the image and fields. Finally, press "Save CSV" to download all collected data.</p>
+        <p>Upload an image and perform OCR. Use the side menu to select specific areas for OCR or to crop the image. After drawing a crop rectangle, click "Confirm Crop" to apply the crop. Recognized words within drawn rectangles will be highlighted in blue on the image. Click on a highlighted block to assign the extracted text to one of the input fields. Once done, press "Update Table" to add a row to the table. Process multiple images by clearing the image and fields. Finally, press "Save CSV" to download all collected data.</p>
 
         <!-- Main Input Section -->
         <div class="input-section">
@@ -831,6 +831,8 @@
                 }
             }
 
+            console.log('Highlighted Rectangles:', highlightedRectangles); // Debugging
+
             statusMessage.textContent = 'OCR complete. Click on highlighted blocks to assign fields.';
             performOcrButton.disabled = false;
             performOcrButton.textContent = 'Perform OCR';
@@ -1017,9 +1019,9 @@
             rectangles.forEach(rect => {
                 drawRectangle(rect, 'rgba(255, 0, 0, 0.3)', 'red');
             });
-            // Draw highlighted rectangles in light blue
+            // Draw highlighted rectangles in blue
             highlightedRectangles.forEach(rect => {
-                drawRectangle(rect, 'rgba(173, 216, 230, 0.3)', 'lightblue');
+                drawRectangle(rect, 'rgba(0, 255, 255, 0.5)', '#00FFFF'); // Increased opacity and brighter color
             });
             // Draw current rectangle if any
             if (currentRect) {
