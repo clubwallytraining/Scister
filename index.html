@@ -2,231 +2,303 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>OCR Image Processor with Clickable Text Highlights, Crop Feature, and Joystick Scroll</title>
+    <title>OCR Image Processor</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Tesseract.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
     <style>
         /* General Styles */
         body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            color: #333;
-            overflow-y: auto; /* Ensure the body can scroll */
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #121212;
+            color: #e0e0e0;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
         }
+
         h1 {
-            font-size: 24px;
+            font-size: 28px;
             margin-bottom: 15px;
+            text-align: center;
         }
+
         p {
             margin-bottom: 15px;
+            text-align: center;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.5;
         }
-        #fieldContainer {
-            margin-top: 20px;
-        }
-        #fieldContainer label {
-            font-weight: bold;
-            margin: 10px 0 5px 0;
-        }
-        #fieldContainer input[type="text"] {
-            width: 100%;
-            padding: 8px;
-            margin-bottom: 5px;
-            box-sizing: border-box;
-        }
-        .buttons-container button {
-            padding: 10px 15px;
-            cursor: pointer;
-            font-weight: bold;
-            border: none;
-            border-radius: 4px;
-            margin-right: 10px;
-            margin-top: 10px;
-            color: #fff;
-        }
-        #perform-ocr {
-            background-color: #2cb67d;
-        }
-        #update-table {
-            background-color: #3498db;
-        }
-        #save-csv {
-            background-color: #f39c12;
-        }
-        #clear-image {
-            background-color: #d00000;
+
+        /* Centered Container */
+        .container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
         }
 
         /* Side Menu Styles */
         #sideMenu {
-            height: 100%; /* Full-height */
-            width: 250px; /* Width of the side menu */
-            position: fixed; /* Stay in place */
+            height: 100%;
+            width: 250px;
+            position: fixed;
             top: 0;
-            left: -250px; /* Hidden by default */
-            background-color: #111; /* Dark background */
-            overflow-x: hidden; /* Disable horizontal scroll */
-            transition: 0.3s; /* Transition effect */
-            padding-top: 60px; /* Place content 60px from the top */
-            z-index: 1000; /* Stay on top */
+            left: -250px;
+            background-color: #1e1e1e;
+            overflow-x: hidden;
+            transition: 0.3s;
+            padding-top: 60px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
+
         #sideMenu button {
-            padding: 10px 30px;
-            width: 90%;
-            margin: 10px auto;
-            display: block;
-            background-color: #444;
-            color: #f1f1f1;
+            padding: 12px 20px;
+            width: 80%;
+            margin: 8px 0;
+            background-color: #333;
+            color: #e0e0e0;
             border: none;
             border-radius: 4px;
             font-size: 16px;
             cursor: pointer;
-            text-align: left;
-            transition: background-color 0.3s;
+            transition: background-color 0.3s, transform 0.2s;
         }
+
         #sideMenu button:hover {
-            background-color: #575757;
+            background-color: #444;
+            transform: translateX(5px);
         }
 
         /* Hamburger Menu Button Styles */
         #hamburgerBtn {
-            position: fixed; /* Fixed position */
+            position: fixed;
             top: 20px;
             left: 20px;
-            z-index: 1100; /* Above side menu */
+            z-index: 1100;
             width: 40px;
             height: 40px;
             background-color: #333;
             border: none;
-            border-radius: 50%; /* Round border */
+            border-radius: 8px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: background-color 0.3s;
         }
+
         #hamburgerBtn:hover {
-            background-color: #555;
+            background-color: #444;
         }
+
         /* Hamburger Icon */
         .bar {
             display: block;
-            width: 20px;
-            height: 2px;
-            background-color: white;
+            width: 22px;
+            height: 3px;
+            background-color: #e0e0e0;
             margin: 4px 0;
             transition: 0.4s;
         }
 
         /* Side Menu Active State */
         #sideMenu.active {
-            left: 0; /* Show the side menu */
+            left: 0;
         }
 
-        /* Image Container Styles */
+        /* Input Section */
         .input-section {
             margin-bottom: 20px;
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
         }
+
         .input-section label {
             display: block;
             margin: 10px 0 5px 0;
+            font-weight: bold;
         }
+
         #imageInput {
-            margin-bottom: 10px;
-            width: 100%;
-            padding: 8px;
-            box-sizing: border-box;
+            margin-bottom: 15px;
+            width: 80%;
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            background-color: #2c2c2c;
+            color: #e0e0e0;
+            cursor: pointer;
         }
+
+        #imageInput::file-selector-button {
+            background-color: #555;
+            color: #e0e0e0;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        #imageInput::file-selector-button:hover {
+            background-color: #666;
+        }
+
+        /* Image Container */
         #imageContainer {
             position: relative;
-            display: inline-block;
-            margin-top: 10px;
-            padding: 0;
+            display: none;
             max-width: 100%;
-            touch-action: none; /* Prevent default touch actions */
+            margin: 0 auto;
         }
+
         #uploadedImage {
             max-width: 100%;
-            border: 1px solid #ddd;
+            border: 2px solid #333;
+            border-radius: 8px;
             display: block;
         }
-        /* Postprocessing Canvas Styles */
-        #postprocessingCanvas {
+
+        /* Canvas Styles */
+        #postprocessingCanvas, #overlayCanvas {
             position: absolute;
             top: 0;
             left: 0;
-            z-index: 5; /* Below overlayCanvas */
-            pointer-events: none; /* Allow clicks to pass through */
+            border-radius: 8px;
         }
-        /* Updated overlayCanvas CSS: Removed width and height */
+
+        #postprocessingCanvas {
+            z-index: 5;
+            pointer-events: none;
+        }
+
         #overlayCanvas {
-            position: absolute;
-            top: 0;
-            left: 0;
             z-index: 10;
             pointer-events: auto;
-            /* Removed width and height to manage via JavaScript */
         }
+
+        /* Status Message */
         #statusMessage {
             font-size: 14px;
-            color: #555;
+            color: #b0b0b0;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        /* Field Container */
+        #fieldContainer {
+            margin-top: 20px;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        #fieldContainer label {
+            display: block;
+            margin: 10px 0 5px 0;
+            font-weight: bold;
+        }
+
+        #fieldContainer input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+            border: none;
+            border-radius: 4px;
+            background-color: #2c2c2c;
+            color: #e0e0e0;
+        }
+
+        /* Buttons in Side Menu */
+        .buttons-container {
+            display: none; /* Hidden since moved to side menu */
+        }
+
+        /* Postprocessing Controls */
+        .postprocessing-controls {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            width: 90%;
+            background-color: #1e1e1e;
+            padding: 15px;
+            border-radius: 8px;
             margin-top: 10px;
         }
 
-        /* Responsive Adjustments */
-        @media (max-width: 600px) {
-            #sideMenu {
-                width: 200px;
-            }
-            #hamburgerBtn {
-                width: 35px;
-                height: 35px;
-            }
-            #sideMenu button {
-                font-size: 16px;
-                padding: 10px 25px;
-            }
+        .postprocessing-controls label {
+            width: 100%;
+            margin: 8px 0 4px 0;
+            text-align: left;
+            color: #e0e0e0;
         }
 
-        /* Postprocessing Controls Styles */
-        .postprocessing-controls {
-            display: none; /* Hidden by default */
-            background-color: #222;
-            padding: 10px 30px;
-        }
-        .postprocessing-controls label {
-            display: block;
-            margin: 10px 0 5px 0;
-            color: #f1f1f1;
-        }
         .postprocessing-controls input[type="range"],
         .postprocessing-controls input[type="checkbox"] {
             width: 100%;
             margin-bottom: 10px;
         }
 
+        /* Data Table */
+        #dataTable {
+            width: 90%;
+            max-width: 800px;
+            margin: 20px auto;
+            border-collapse: collapse;
+            background-color: #1e1e1e;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        #dataTable th, #dataTable td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #333;
+        }
+
+        #dataTable th {
+            background-color: #333;
+            color: #e0e0e0;
+        }
+
+        #dataTable tr:hover {
+            background-color: #2a2a2a;
+        }
+
         /* Joystick Slider Styles */
         #joystickContainer {
             position: fixed;
-            right: 20px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 60px;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
             height: 200px;
-            background-color: rgba(0, 0, 0, 0.1);
-            border-radius: 30px;
+            background-color: rgba(0, 0, 0, 0.7);
+            border-radius: 40px;
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 1200; /* Above all other elements */
+            z-index: 1200;
         }
 
         #joystickSlider {
             position: relative;
-            width: 10px;
+            width: 20px;
             height: 160px;
-            background-color: #ccc;
-            border-radius: 5px;
+            background-color: #444;
+            border-radius: 10px;
         }
 
         #joystickKnob {
@@ -264,11 +336,69 @@
             bottom: 8px;
         }
 
-        /* Prevent text selection during dragging */
-        #joystickContainer, #joystickSlider, #joystickKnob {
-            user-select: none;
-            -webkit-user-select: none;
-            -ms-user-select: none;
+        /* Responsive Adjustments */
+        @media (max-width: 600px) {
+            #sideMenu {
+                width: 200px;
+            }
+
+            #hamburgerBtn {
+                width: 35px;
+                height: 35px;
+            }
+
+            #sideMenu button {
+                font-size: 14px;
+                padding: 10px 15px;
+            }
+
+            #joystickContainer {
+                width: 60px;
+                height: 160px;
+            }
+
+            #joystickSlider {
+                width: 15px;
+                height: 120px;
+            }
+
+            #joystickKnob {
+                width: 30px;
+                height: 30px;
+            }
+
+            .triangle {
+                border-left: 5px solid transparent;
+                border-right: 5px solid transparent;
+            }
+
+            #triangleUp {
+                border-bottom: 10px solid white;
+            }
+
+            #triangleDown {
+                border-top: 10px solid white;
+            }
+        }
+
+        /* Modern Button Styles */
+        .side-menu-button {
+            position: relative;
+        }
+
+        .side-menu-button::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 0%;
+            height: 2px;
+            background-color: #e0e0e0;
+            transition: width 0.3s;
+        }
+
+        .side-menu-button:hover::after {
+            width: 100%;
         }
 
     </style>
@@ -283,13 +413,17 @@
 
     <!-- Side Menu -->
     <div id="sideMenu">
-        <button id="draw-button">Draw</button>
-        <button id="crop-button">Crop</button>
-        <button id="confirm-crop-button" style="display:none;">Confirm Crop</button>
-        <button id="undo-draw-button" style="display:none;">Undo Draw</button>
+        <button id="draw-button" class="side-menu-button">Draw</button>
+        <button id="undo-draw-button" class="side-menu-button" style="display:none;">Undo Draw</button>
+        <button id="crop-button" class="side-menu-button">Crop</button>
+        <button id="confirm-crop-button" class="side-menu-button" style="display:none;">Confirm Crop</button>
+        <button id="perform-ocr-button" class="side-menu-button">Perform OCR</button>
+        <button id="clear-image-button" class="side-menu-button">Clear Image & Fields</button>
+        <button id="update-table-button" class="side-menu-button">Update Table</button>
+        <button id="save-csv-button" class="side-menu-button">Save CSV</button>
 
         <!-- Postprocessing Submenu -->
-        <button id="postprocessing-button">Postprocessing</button>
+        <button id="postprocessing-button" class="side-menu-button">Postprocessing</button>
         <div class="postprocessing-controls" id="postprocessing-controls">
             <label for="grayscale">Grayscale:</label>
             <input type="checkbox" id="grayscale">
@@ -308,44 +442,38 @@
         </div>
     </div>
 
-    <h1>OCR Image Processor with Clickable Text Highlights, Crop Feature, and Joystick Scroll</h1>
-    <p>Upload an image and perform OCR. Use the side menu to select specific areas for OCR or to crop the image. After drawing a crop rectangle, click "Confirm Crop" to apply the crop. Recognized words within drawn rectangles will be highlighted in light blue on the image. Click on a highlighted block to assign the concatenated text to one of the input fields (Item Name Short, Item Name Long, UPC, Location, Downstack, Notes). You can edit fields manually as well. Once done, press "Update Table" to add a row to the table. Process multiple images by clearing the image and fields. Finally, press "Save CSV" to download all collected data.</p>
+    <div class="container">
+        <h1>OCR Image Processor</h1>
+        <p>Upload an image and perform OCR. Use the side menu to select specific areas for OCR or to crop the image. After drawing a crop rectangle, click "Confirm Crop" to apply the crop. Recognized words within drawn rectangles will be highlighted in light blue on the image. Click on a highlighted block to assign the concatenated text to one of the input fields. Once done, press "Update Table" to add a row to the table. Process multiple images by clearing the image and fields. Finally, press "Save CSV" to download all collected data.</p>
 
-    <!-- Main Input Section -->
-    <div class="input-section">
-        <label for="imageInput">Upload Image:</label>
-        <input type="file" id="imageInput" accept="image/*">
-        <div id="imageContainer" style="display:none;">
-            <img id="uploadedImage" alt="Uploaded Image">
-            <!-- Postprocessing Canvas -->
-            <canvas id="postprocessingCanvas"></canvas>
-            <canvas id="overlayCanvas"></canvas>
+        <!-- Main Input Section -->
+        <div class="input-section">
+            <label for="imageInput">Upload Image:</label>
+            <input type="file" id="imageInput" accept="image/*">
+            <div id="imageContainer">
+                <img id="uploadedImage" alt="Uploaded Image">
+                <!-- Postprocessing Canvas -->
+                <canvas id="postprocessingCanvas"></canvas>
+                <canvas id="overlayCanvas"></canvas>
+            </div>
+            <p id="statusMessage"></p>
         </div>
-        <p id="statusMessage"></p>
-        <button id="perform-ocr">Perform OCR</button>
-        <button id="clear-image">Clear Image & Fields</button>
-    </div>
 
-    <!-- Input Fields -->
-    <div id="fieldContainer">
-        <label for="field1">Item Name Short:</label>
-        <input type="text" id="field1">
-        <label for="field2">Item Name Long:</label>
-        <input type="text" id="field2">
-        <label for="field3">UPC:</label>
-        <input type="text" id="field3">
-        <label for="field4">Location:</label>
-        <input type="text" id="field4">
-        <label for="field5">Downstack:</label>
-        <input type="text" id="field5">
-        <label for="field6">Notes:</label>
-        <input type="text" id="field6">
-    </div>
-
-    <!-- Action Buttons -->
-    <div class="buttons-container">
-        <button id="update-table">Update Table</button>
-        <button id="save-csv">Save CSV</button>
+        <!-- Input Fields -->
+        <div id="fieldContainer">
+            <label for="field1">Item Name Short:</label>
+            <input type="text" id="field1">
+            <label for="field2">Item Name Long:</label>
+            <input type="text" id="field2">
+            <label for="field3">UPC:</label>
+            <input type="text" id="field3">
+            <label for="field4">Location:</label>
+            <input type="text" id="field4">
+            <label for="field5">Downstack:</label>
+            <input type="text" id="field5">
+            <label for="field6">Notes:</label>
+            <input type="text" id="field6">
+        </div>
     </div>
 
     <!-- Data Table -->
@@ -381,17 +509,19 @@
         const uploadedImage = document.getElementById('uploadedImage');
         const imageContainer = document.getElementById('imageContainer');
         const overlayCanvas = document.getElementById('overlayCanvas');
-        const postprocessingCanvas = document.getElementById('postprocessingCanvas'); // New
-        const performOcrButton = document.getElementById('perform-ocr');
-        const clearImageButton = document.getElementById('clear-image');
+        const postprocessingCanvas = document.getElementById('postprocessingCanvas');
         const statusMessage = document.getElementById('statusMessage');
         const dataTable = document.getElementById('dataTable').querySelector('tbody');
 
         // Side Menu Buttons
         const drawButton = document.getElementById('draw-button');
+        const undoDrawButton = document.getElementById('undo-draw-button');
         const cropButton = document.getElementById('crop-button');
         const confirmCropButton = document.getElementById('confirm-crop-button');
-        const undoDrawButton = document.getElementById('undo-draw-button');
+        const performOcrButton = document.getElementById('perform-ocr-button');
+        const clearImageButton = document.getElementById('clear-image-button');
+        const updateTableButton = document.getElementById('update-table-button');
+        const saveCsvButton = document.getElementById('save-csv-button');
 
         // Postprocessing Controls
         const postprocessingButton = document.getElementById('postprocessing-button');
@@ -410,10 +540,6 @@
         const field5 = document.getElementById('field5');
         const field6 = document.getElementById('field6');
 
-        // Action Buttons
-        const updateTableButton = document.getElementById('update-table');
-        const saveCsvButton = document.getElementById('save-csv');
-
         // Hamburger Menu Button
         const hamburgerBtn = document.getElementById('hamburgerBtn');
         const sideMenu = document.getElementById('sideMenu');
@@ -424,34 +550,24 @@
         const joystickKnob = document.getElementById('joystickKnob');
 
         // State Variables
-        let currentWords = []; // Store recognized words with their bounding boxes
-        let imageDataURL = null; // For OCR
-        let ocrRectangles = []; // Store user-drawn rectangles for OCR
-        let cropRect = null; // Single crop rectangle
+        let currentWords = [];
+        let imageDataURL = null;
+        let ocrRectangles = [];
+        let cropRect = null;
         let isDrawingMode = false;
         let isCroppingMode = false;
         let isDrawing = false;
         let isResizing = false;
         let resizeHandle = null;
-        let resizeTarget = null; // The rectangle being resized
+        let resizeTarget = null;
         let startX = 0;
         let startY = 0;
         let currentRect = null;
-
-        // Groups for highlighted blocks
-        let wordGroups = []; // Each group has {text: '...', x, y, width, height}
-
-        // Define resize handles size (default)
+        let wordGroups = [];
         let HANDLE_SIZE = 10;
-
-        // Handle types
         const HANDLE_TYPES = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'];
-
-        // Current active handle
         let activeHandle = null;
-
-        // Flag to control visibility of handles
-        let handlesVisible = true; // Initially, handles are visible
+        let handlesVisible = true;
 
         // Side Menu Toggle Function
         function toggleSideMenu() {
@@ -480,13 +596,13 @@
         // Close Side Menu After Clicking a Button
         sideMenu.querySelectorAll('button').forEach(button => {
             button.addEventListener('click', () => {
-                sideMenu.classList.remove('active'); // Close the side menu after clicking
+                sideMenu.classList.remove('active');
             });
         });
 
         // Event Listener for Postprocessing Button to Toggle Controls
         postprocessingButton.addEventListener('click', () => {
-            postprocessingControls.style.display = postprocessingControls.style.display === 'block' ? 'none' : 'block';
+            postprocessingControls.style.display = postprocessingControls.style.display === 'flex' ? 'none' : 'flex';
         });
 
         // Adjust Canvas for High-DPI Displays and Responsive Sizing
@@ -516,17 +632,16 @@
         // Function to Update HANDLE_SIZE Based on Screen Width
         function updateHandleSize() {
             if (window.innerWidth <= 600) {
-                HANDLE_SIZE = 20; // Larger handles for mobile
+                HANDLE_SIZE = 20;
             } else {
-                HANDLE_SIZE = 10; // Default size for desktop
+                HANDLE_SIZE = 10;
             }
-            redrawCanvas(); // Redraw to apply new handle sizes
+            redrawCanvas();
         }
 
         // Call updateHandleSize on Initial Load and on Window Resize
         window.addEventListener('load', () => {
             updateHandleSize();
-            // Also apply postprocessing if image is already loaded
             if (uploadedImage.complete && uploadedImage.naturalWidth !== 0) {
                 applyPostprocessing();
             }
@@ -547,23 +662,21 @@
             reader.onload = function(e) {
                 uploadedImage.src = e.target.result;
                 uploadedImage.onload = () => {
-                    imageContainer.style.display = 'inline-block';
+                    imageContainer.style.display = 'block';
                     
                     adjustCanvas();
 
                     clearCanvas();
                     statusMessage.textContent = 'Image loaded. You can crop or draw on the image.';
                     imageDataURL = e.target.result;
-                    // Reset any previous drawings
                     ocrRectangles = [];
                     wordGroups = [];
                     cropRect = null;
-                    handlesVisible = true; // Show handles when a new image is loaded
+                    handlesVisible = true;
                     confirmCropButton.style.display = 'none';
-                    undoDrawButton.style.display = 'none'; // Hide Undo Draw initially
+                    undoDrawButton.style.display = 'none';
                     redrawCanvas();
 
-                    // Apply postprocessing after image is loaded
                     applyPostprocessing();
                 };
             };
@@ -577,7 +690,6 @@
                 return;
             }
             if (isCroppingMode) {
-                // If cropping mode is active, deactivate it
                 isCroppingMode = false;
                 cropButton.textContent = 'Crop';
                 confirmCropButton.style.display = 'none';
@@ -586,11 +698,10 @@
             if (isDrawingMode) {
                 drawButton.textContent = 'Cancel Draw';
                 statusMessage.textContent = 'Draw mode activated. Click and drag on the image to draw rectangles for OCR.';
-                // Clear crop rectangle if any
                 cropRect = null;
                 confirmCropButton.style.display = 'none';
-                handlesVisible = true; // Show handles in draw mode
-                undoDrawButton.style.display = ocrRectangles.length > 0 ? 'inline-block' : 'none';
+                handlesVisible = true;
+                undoDrawButton.style.display = ocrRectangles.length > 0 ? 'block' : 'none';
                 redrawCanvas();
             } else {
                 drawButton.textContent = 'Draw';
@@ -607,7 +718,6 @@
                 return;
             }
             if (isDrawingMode) {
-                // If draw mode is active, deactivate it
                 isDrawingMode = false;
                 drawButton.textContent = 'Draw';
             }
@@ -615,10 +725,9 @@
             if (isCroppingMode) {
                 cropButton.textContent = 'Cancel Crop';
                 statusMessage.textContent = 'Crop mode activated. Click and drag on the image to select the crop area.';
-                // Clear existing crop rectangle
                 cropRect = null;
                 confirmCropButton.style.display = 'none';
-                handlesVisible = true; // Show handles in crop mode
+                handlesVisible = true;
                 redrawCanvas();
             } else {
                 cropButton.textContent = 'Crop';
@@ -636,12 +745,11 @@
                 return;
             }
             performCrop(cropRect);
-            // After cropping, hide the Confirm Crop button and deactivate crop mode
             isCroppingMode = false;
             cropButton.textContent = 'Crop';
             confirmCropButton.style.display = 'none';
             statusMessage.textContent = 'Image cropped successfully.';
-            handlesVisible = false; // Hide handles after cropping
+            handlesVisible = false;
             redrawCanvas();
         });
 
@@ -654,7 +762,7 @@
             ocrRectangles.pop();
             redrawCanvas();
             statusMessage.textContent = 'Last drawn rectangle has been removed.';
-            undoDrawButton.style.display = ocrRectangles.length > 0 ? 'inline-block' : 'none';
+            undoDrawButton.style.display = ocrRectangles.length > 0 ? 'block' : 'none';
         });
 
         // Mouse Events for Desktop Drawing/Cropping and Resizing
@@ -700,10 +808,6 @@
         });
 
         overlayCanvas.addEventListener('mouseup', (e) => {
-            const rect = overlayCanvas.getBoundingClientRect();
-            const x = (e.clientX - rect.left);
-            const y = (e.clientY - rect.top);
-
             if (isResizing) {
                 isResizing = false;
                 activeHandle = null;
@@ -718,18 +822,16 @@
                 if (isDrawingMode) {
                     ocrRectangles.push(normalizedRect);
                     statusMessage.textContent = `${ocrRectangles.length} OCR rectangle(s) drawn.`;
-                    undoDrawButton.style.display = ocrRectangles.length > 0 ? 'inline-block' : 'none';
+                    undoDrawButton.style.display = ocrRectangles.length > 0 ? 'block' : 'none';
                 } else if (isCroppingMode) {
                     if (cropRect) {
-                        // Replace existing cropRect
                         cropRect = normalizedRect;
                         statusMessage.textContent = 'Crop rectangle updated. You can resize or confirm the crop.';
                     } else {
                         cropRect = normalizedRect;
                         statusMessage.textContent = 'Crop rectangle drawn. You can resize it using the handles or confirm the crop.';
                     }
-                    // Show Confirm Crop button
-                    confirmCropButton.style.display = 'inline-block';
+                    confirmCropButton.style.display = 'block';
                 }
                 currentRect = null;
                 redrawCanvas();
@@ -739,8 +841,8 @@
         // Touch Events for Mobile Drawing/Cropping and Resizing
         overlayCanvas.addEventListener('touchstart', (e) => {
             if (!(isDrawingMode || isCroppingMode)) return;
-            e.preventDefault(); // Prevent scrolling
-            if (e.touches.length !== 1) return; // Only single touch
+            e.preventDefault();
+            if (e.touches.length !== 1) return;
             const rect = overlayCanvas.getBoundingClientRect();
             const x = (e.touches[0].clientX - rect.left);
             const y = (e.touches[0].clientY - rect.top);
@@ -763,8 +865,8 @@
 
         overlayCanvas.addEventListener('touchmove', (e) => {
             if (!(isDrawingMode || isCroppingMode)) return;
-            e.preventDefault(); // Prevent scrolling
-            if (e.touches.length !== 1) return; // Only single touch
+            e.preventDefault();
+            if (e.touches.length !== 1) return;
             const rect = overlayCanvas.getBoundingClientRect();
             const x = (e.touches[0].clientX - rect.left);
             const y = (e.touches[0].clientY - rect.top);
@@ -785,7 +887,6 @@
         }, { passive: false });
 
         overlayCanvas.addEventListener('touchend', (e) => {
-            if (!(isDrawingMode || isCroppingMode)) return;
             if (isResizing) {
                 isResizing = false;
                 activeHandle = null;
@@ -800,18 +901,16 @@
                 if (isDrawingMode) {
                     ocrRectangles.push(normalizedRect);
                     statusMessage.textContent = `${ocrRectangles.length} OCR rectangle(s) drawn.`;
-                    undoDrawButton.style.display = ocrRectangles.length > 0 ? 'inline-block' : 'none';
+                    undoDrawButton.style.display = ocrRectangles.length > 0 ? 'block' : 'none';
                 } else if (isCroppingMode) {
                     if (cropRect) {
-                        // Replace existing cropRect
                         cropRect = normalizedRect;
                         statusMessage.textContent = 'Crop rectangle updated. You can resize or confirm the crop.';
                     } else {
                         cropRect = normalizedRect;
                         statusMessage.textContent = 'Crop rectangle drawn. You can resize it using the handles or confirm the crop.';
                     }
-                    // Show Confirm Crop button
-                    confirmCropButton.style.display = 'inline-block';
+                    confirmCropButton.style.display = 'block';
                 }
                 currentRect = null;
                 redrawCanvas();
@@ -830,7 +929,6 @@
             }
 
             if (isDrawingMode) {
-                // Programmatically click the "Cancel Draw" button to exit drawing mode
                 drawButton.click();
                 statusMessage.textContent = 'Drawing mode exited. Performing OCR... please wait.';
             } else {
@@ -843,7 +941,7 @@
             statusMessage.textContent = 'OCR complete. Click on highlighted blocks to assign fields.';
             processOCRData(textData);
             drawWordGroups();
-            handlesVisible = false; // Hide handles after OCR
+            handlesVisible = false;
             redrawCanvas();
         });
 
@@ -862,7 +960,7 @@
             }
         });
 
-        // Prevent Context Menu on Canvas (optional)
+        // Prevent Context Menu on Canvas
         overlayCanvas.addEventListener('contextmenu', (e) => {
             e.preventDefault();
         });
@@ -934,11 +1032,9 @@
             drawButton.textContent = 'Draw';
             cropButton.textContent = 'Crop';
             confirmCropButton.style.display = 'none';
-            handlesVisible = true; // Show handles when resetting
+            handlesVisible = true;
             undoDrawButton.style.display = 'none';
-            redrawCanvas();
 
-            // Clear postprocessing canvas
             const ppCtx = postprocessingCanvas.getContext('2d');
             ppCtx.clearRect(0, 0, postprocessingCanvas.width, postprocessingCanvas.height);
         }
@@ -1015,8 +1111,8 @@
         function drawHandles(rect) {
             const ctx = overlayCanvas.getContext('2d');
             const handles = getHandlePositions(rect);
-            ctx.fillStyle = 'white';
-            ctx.strokeStyle = 'black';
+            ctx.fillStyle = '#e0e0e0';
+            ctx.strokeStyle = '#000';
             for (let key of HANDLE_TYPES) {
                 const handle = handles[key];
                 ctx.fillRect(handle.x - HANDLE_SIZE / 2, handle.y - HANDLE_SIZE / 2, HANDLE_SIZE, HANDLE_SIZE);
@@ -1062,7 +1158,7 @@
             return null;
         }
 
-        // Function to Normalize Rectangle (handles negative width/height)
+        // Function to Normalize Rectangle
         function normalizeRect(rect) {
             let { x, y, width, height } = rect;
             if (width < 0) {
@@ -1131,9 +1227,9 @@
 
                     const groupRect = {
                         x: x0 * (uploadedImage.clientWidth / uploadedImage.naturalWidth),
-                        y: y0 * (uploadedImage.clientHeight / uploadedImage.naturalHeight), // Corrected scaling
+                        y: y0 * (uploadedImage.clientHeight / uploadedImage.naturalHeight),
                         width: (x1 - x0) * (uploadedImage.clientWidth / uploadedImage.naturalWidth),
-                        height: (y1 - y0) * (uploadedImage.clientHeight / uploadedImage.naturalHeight), // Corrected scaling
+                        height: (y1 - y0) * (uploadedImage.clientHeight / uploadedImage.naturalHeight),
                         text: concatenatedText
                     };
 
@@ -1159,7 +1255,7 @@
                 `6) Notes\n\n` +
                 `Enter a number 1-6:`
             );
-            if (!choice) return; // User canceled
+            if (!choice) return;
             const num = parseInt(choice, 10);
             if (isNaN(num) || num < 1 || num > 6) {
                 alert('Invalid choice.');
@@ -1208,16 +1304,14 @@
             uploadedImage.onload = () => {
                 adjustCanvas();
                 clearCanvas();
-                // Reset any previous drawings
                 ocrRectangles = [];
                 wordGroups = [];
                 cropRect = null;
                 statusMessage.textContent = 'Image cropped successfully. You can now draw OCR rectangles.';
-                handlesVisible = true; // Show handles after cropping
+                handlesVisible = true;
                 undoDrawButton.style.display = 'none';
                 redrawCanvas();
 
-                // Apply postprocessing after cropping
                 applyPostprocessing();
             };
         }
@@ -1263,7 +1357,6 @@
                         break;
                 }
 
-                // Normalize the rectangle to prevent negative width/height and stay within image boundaries
                 cropRect = normalizeRect(cropRect);
             } else if (typeof resizeTarget === 'number') {
                 const rect = ocrRectangles[resizeTarget];
@@ -1306,7 +1399,6 @@
                         break;
                 }
 
-                // Normalize the rectangle to prevent negative width/height and stay within image boundaries
                 ocrRectangles[resizeTarget] = normalizeRect(rect);
             }
         }
@@ -1337,7 +1429,6 @@
             if (!uploadedImage.src) return;
 
             const ppCtx = postprocessingCanvas.getContext('2d');
-            const ovCtx = overlayCanvas.getContext('2d');
 
             // Clear Postprocessing Canvas
             ppCtx.clearRect(0, 0, postprocessingCanvas.width, postprocessingCanvas.height);
@@ -1358,7 +1449,7 @@
             }
 
             // Apply Brightness
-            const brightnessValue = parseInt(brightnessSlider.value, 10); // Range: -100 to 100
+            const brightnessValue = parseInt(brightnessSlider.value, 10);
             if (brightnessValue !== 0) {
                 const factor = brightnessValue;
                 for (let i = 0; i < data.length; i += 4) {
@@ -1368,10 +1459,10 @@
                 }
             }
 
-            // Apply Clarity (Implemented as Contrast Adjustment)
-            const clarityValue = parseInt(claritySlider.value, 10); // Range: 0 to 100
-            if (clarityValue !== 50) { // Default is 50 (no change)
-                const contrast = clarityValue / 50; // Normalize to 0-2
+            // Apply Clarity (Contrast Adjustment)
+            const clarityValue = parseInt(claritySlider.value, 10);
+            if (clarityValue !== 50) {
+                const contrast = clarityValue / 50;
                 for (let i = 0; i < data.length; i += 4) {
                     data[i] = ((data[i] - 128) * contrast) + 128;
                     data[i + 1] = ((data[i + 1] - 128) * contrast) + 128;
@@ -1379,12 +1470,11 @@
                 }
             }
 
-            // Apply Highlight (Implemented as additional Brightness)
-            const highlightValue = parseInt(highlightSlider.value, 10); // Range: 0 to 100
+            // Apply Highlight (Additional Brightness)
+            const highlightValue = parseInt(highlightSlider.value, 10);
             if (highlightValue !== 0) {
-                const factor = highlightValue * 0.5; // Scale down the factor
+                const factor = highlightValue * 0.5;
                 for (let i = 0; i < data.length; i += 4) {
-                    // Only brighten pixels that are not too dark
                     if (data[i] > 50 || data[i + 1] > 50 || data[i + 2] > 50) {
                         data[i] += factor;
                         data[i + 1] += factor;
@@ -1397,9 +1487,9 @@
             ppCtx.putImageData(imageData, 0, 0);
 
             // Apply Sharpening
-            const sharpeningValue = parseInt(sharpeningSlider.value, 10); // Range: 0 to 100
+            const sharpeningValue = parseInt(sharpeningSlider.value, 10);
             if (sharpeningValue > 0) {
-                applySharpeningFilter(ppCtx, sharpeningValue / 100); // Normalize to 0-1
+                applySharpeningFilter(ppCtx, sharpeningValue / 100);
             }
 
             // Update imageDataURL to use the postprocessed image
@@ -1452,7 +1542,7 @@
                     output[dstOffset] = Math.min(Math.max(r * intensity, 0), 255);
                     output[dstOffset + 1] = Math.min(Math.max(g * intensity, 0), 255);
                     output[dstOffset + 2] = Math.min(Math.max(b * intensity, 0), 255);
-                    output[dstOffset + 3] = src[dstOffset + 3]; // alpha
+                    output[dstOffset + 3] = src[dstOffset + 3];
                 }
             }
 
@@ -1490,10 +1580,10 @@
         let isDraggingJoystick = false;
         let joystickStartY = 0;
         let knobStartTop = 0;
-        const sliderHeight = 160; // Height of the joystickSlider in pixels
+        const sliderHeight = 160;
 
         // Maximum movement from center
-        const maxOffset = sliderHeight / 2 - 20; // Subtract half the knob size
+        const maxOffset = sliderHeight / 2 - 20;
 
         // Event Listeners for Joystick Knob
         joystickKnob.addEventListener('mousedown', (e) => {
@@ -1501,7 +1591,7 @@
             joystickStartY = e.clientY;
             const knobRect = joystickKnob.getBoundingClientRect();
             knobStartTop = knobRect.top - overlayCanvas.getBoundingClientRect().top;
-            document.body.style.userSelect = 'none'; // Prevent text selection
+            document.body.style.userSelect = 'none';
         });
 
         document.addEventListener('mousemove', (e) => {
@@ -1518,12 +1608,12 @@
             // Calculate scroll amount based on knob position
             const center = (sliderHeight - joystickKnob.clientHeight) / 2;
             const offset = newTop - center;
-            const scrollFraction = offset / center; // -1 to 1
-            const scrollAmount = scrollFraction * 50; // Adjust scroll sensitivity
+            const scrollFraction = offset / center;
+            const scrollAmount = scrollFraction * 50;
 
             // Scroll the page
             window.scrollBy({
-                top: -scrollAmount, // Negative to match joystick direction
+                top: -scrollAmount,
                 behavior: 'smooth'
             });
         });
@@ -1547,7 +1637,7 @@
             joystickStartY = e.touches[0].clientY;
             const knobRect = joystickKnob.getBoundingClientRect();
             knobStartTop = knobRect.top - overlayCanvas.getBoundingClientRect().top;
-            e.preventDefault(); // Prevent default touch behavior
+            e.preventDefault();
         }, { passive: false });
 
         document.addEventListener('touchmove', (e) => {
@@ -1564,16 +1654,16 @@
             // Calculate scroll amount based on knob position
             const center = (sliderHeight - joystickKnob.clientHeight) / 2;
             const offset = newTop - center;
-            const scrollFraction = offset / center; // -1 to 1
-            const scrollAmount = scrollFraction * 50; // Adjust scroll sensitivity
+            const scrollFraction = offset / center;
+            const scrollAmount = scrollFraction * 50;
 
             // Scroll the page
             window.scrollBy({
-                top: -scrollAmount, // Negative to match joystick direction
+                top: -scrollAmount,
                 behavior: 'smooth'
             });
 
-            e.preventDefault(); // Prevent default touch behavior
+            e.preventDefault();
         }, { passive: false });
 
         document.addEventListener('touchend', (e) => {
