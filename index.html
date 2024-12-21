@@ -638,8 +638,8 @@
             const ovCtx = overlayCanvas.getContext('2d');
             ovCtx.scale(ratio, ratio);
 
-            // Calculate uniform scaling factor based on width
-            scale = uploadedImage.clientWidth / uploadedImage.naturalWidth;
+            // Calculate uniform scaling factor based on natural size
+            scale = uploadedImage.naturalWidth / uploadedImage.clientWidth;
 
             // After adjusting, redraw postprocessing
             applyPostprocessing();
@@ -1027,14 +1027,14 @@
             }
         }
 
-        // Function to Draw a Rectangle
+        // Function to Draw a Rectangle with Correct Scaling
         function drawRectangle(rect, fillStyle, strokeStyle) {
             const ctx = overlayCanvas.getContext('2d');
             ctx.fillStyle = fillStyle;
             ctx.strokeStyle = strokeStyle;
             ctx.lineWidth = 2;
-            ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
-            ctx.strokeRect(rect.x, rect.y, rect.width, rect.height);
+            ctx.fillRect(rect.x * scale, rect.y * scale, rect.width * scale, rect.height * scale);
+            ctx.strokeRect(rect.x * scale, rect.y * scale, rect.width * scale, rect.height * scale);
         }
 
         // Function to Normalize Rectangle
@@ -1048,11 +1048,11 @@
                 y += height;
                 height = Math.abs(height);
             }
-            // Ensure rectangle stays within image boundaries
+            // Ensure rectangle stays within natural image boundaries
             x = Math.max(0, x);
             y = Math.max(0, y);
-            width = Math.min(width, uploadedImage.clientWidth - x);
-            height = Math.min(height, uploadedImage.clientHeight - y);
+            width = Math.min(width, uploadedImage.naturalWidth - x);
+            height = Math.min(height, uploadedImage.naturalHeight - y);
             return { x, y, width, height };
         }
 
