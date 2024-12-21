@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>OCR Image Processor with Clickable Text Highlights and Crop Feature</title>
+    <title>OCR Image Processor with Clickable Text Highlights, Crop Feature, and Joystick Scroll</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Tesseract.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
@@ -12,6 +12,7 @@
             font-family: Arial, sans-serif;
             margin: 20px;
             color: #333;
+            overflow-y: auto; /* Ensure the body can scroll */
         }
         h1 {
             font-size: 24px;
@@ -203,6 +204,73 @@
             width: 100%;
             margin-bottom: 10px;
         }
+
+        /* Joystick Slider Styles */
+        #joystickContainer {
+            position: fixed;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 60px;
+            height: 200px;
+            background-color: rgba(0, 0, 0, 0.1);
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1200; /* Above all other elements */
+        }
+
+        #joystickSlider {
+            position: relative;
+            width: 10px;
+            height: 160px;
+            background-color: #ccc;
+            border-radius: 5px;
+        }
+
+        #joystickKnob {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            top: 50%;
+            width: 40px;
+            height: 40px;
+            background-color: #555;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: top 0.2s ease;
+        }
+
+        /* Triangles Inside Joystick Knob */
+        .triangle {
+            width: 0;
+            height: 0;
+            border-left: 7px solid transparent;
+            border-right: 7px solid transparent;
+            position: absolute;
+        }
+
+        #triangleUp {
+            border-bottom: 12px solid white;
+            top: 8px;
+        }
+
+        #triangleDown {
+            border-top: 12px solid white;
+            bottom: 8px;
+        }
+
+        /* Prevent text selection during dragging */
+        #joystickContainer, #joystickSlider, #joystickKnob {
+            user-select: none;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+        }
+
     </style>
 </head>
 <body>
@@ -240,7 +308,7 @@
         </div>
     </div>
 
-    <h1>OCR Image Processor with Clickable Text Highlights and Crop Feature</h1>
+    <h1>OCR Image Processor with Clickable Text Highlights, Crop Feature, and Joystick Scroll</h1>
     <p>Upload an image and perform OCR. Use the side menu to select specific areas for OCR or to crop the image. After drawing a crop rectangle, click "Confirm Crop" to apply the crop. Recognized words within drawn rectangles will be highlighted in light blue on the image. Click on a highlighted block to assign the concatenated text to one of the input fields (Item Name Short, Item Name Long, UPC, Location, Downstack, Notes). You can edit fields manually as well. Once done, press "Update Table" to add a row to the table. Process multiple images by clearing the image and fields. Finally, press "Save CSV" to download all collected data.</p>
 
     <!-- Main Input Section -->
@@ -249,7 +317,7 @@
         <input type="file" id="imageInput" accept="image/*">
         <div id="imageContainer" style="display:none;">
             <img id="uploadedImage" alt="Uploaded Image">
-            <!-- New Postprocessing Canvas -->
+            <!-- Postprocessing Canvas -->
             <canvas id="postprocessingCanvas"></canvas>
             <canvas id="overlayCanvas"></canvas>
         </div>
@@ -297,6 +365,16 @@
         </tbody>
     </table>
 
+    <!-- Joystick Slider -->
+    <div id="joystickContainer" aria-label="Scroll Joystick">
+        <div id="joystickSlider">
+            <div id="joystickKnob">
+                <div id="triangleUp" class="triangle"></div>
+                <div id="triangleDown" class="triangle"></div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // DOM Elements
         const imageInput = document.getElementById('imageInput');
@@ -339,6 +417,11 @@
         // Hamburger Menu Button
         const hamburgerBtn = document.getElementById('hamburgerBtn');
         const sideMenu = document.getElementById('sideMenu');
+
+        // Joystick Elements
+        const joystickContainer = document.getElementById('joystickContainer');
+        const joystickSlider = document.getElementById('joystickSlider');
+        const joystickKnob = document.getElementById('joystickKnob');
 
         // State Variables
         let currentWords = []; // Store recognized words with their bounding boxes
@@ -1228,11 +1311,6 @@
             }
         }
 
-        // Function to Assign Text to Fields
-        function assignTextToField(text) {
-            // Already handled via assignGroupToField
-        }
-
         // Prevent Scrolling When Touching the Canvas in Draw or Crop Mode
         document.body.addEventListener('touchstart', function(e) {
             if ((isDrawingMode || isCroppingMode) && e.target === overlayCanvas) {
@@ -1406,6 +1484,112 @@
         // Already implemented above
 
         /* -------------------- End of Postprocessing Integration -------------------- */
+
+        /* -------------------- Joystick Scroll Functions -------------------- */
+
+        let isDraggingJoystick = false;
+        let joystickStartY = 0;
+        let knobStartTop = 0;
+        const sliderHeight = 160; // Height of the joystickSlider in pixels
+
+        // Maximum movement from center
+        const maxOffset = sliderHeight / 2 - 20; // Subtract half the knob size
+
+        // Event Listeners for Joystick Knob
+        joystickKnob.addEventListener('mousedown', (e) => {
+            isDraggingJoystick = true;
+            joystickStartY = e.clientY;
+            const knobRect = joystickKnob.getBoundingClientRect();
+            knobStartTop = knobRect.top - overlayCanvas.getBoundingClientRect().top;
+            document.body.style.userSelect = 'none'; // Prevent text selection
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDraggingJoystick) return;
+            const dy = e.clientY - joystickStartY;
+            let newTop = knobStartTop + dy;
+
+            // Clamp the knob within the slider
+            newTop = Math.max(0, Math.min(newTop, sliderHeight - joystickKnob.clientHeight));
+
+            // Update knob position
+            joystickKnob.style.top = `${newTop}px`;
+
+            // Calculate scroll amount based on knob position
+            const center = (sliderHeight - joystickKnob.clientHeight) / 2;
+            const offset = newTop - center;
+            const scrollFraction = offset / center; // -1 to 1
+            const scrollAmount = scrollFraction * 50; // Adjust scroll sensitivity
+
+            // Scroll the page
+            window.scrollBy({
+                top: -scrollAmount, // Negative to match joystick direction
+                behavior: 'smooth'
+            });
+        });
+
+        document.addEventListener('mouseup', (e) => {
+            if (isDraggingJoystick) {
+                isDraggingJoystick = false;
+                // Animate knob back to center
+                joystickKnob.style.transition = 'top 0.2s ease';
+                joystickKnob.style.top = `${(sliderHeight - joystickKnob.clientHeight) / 2}px`;
+                // Remove transition after animation
+                setTimeout(() => {
+                    joystickKnob.style.transition = '';
+                }, 200);
+            }
+        });
+
+        // Touch Events for Mobile
+        joystickKnob.addEventListener('touchstart', (e) => {
+            isDraggingJoystick = true;
+            joystickStartY = e.touches[0].clientY;
+            const knobRect = joystickKnob.getBoundingClientRect();
+            knobStartTop = knobRect.top - overlayCanvas.getBoundingClientRect().top;
+            e.preventDefault(); // Prevent default touch behavior
+        }, { passive: false });
+
+        document.addEventListener('touchmove', (e) => {
+            if (!isDraggingJoystick) return;
+            const dy = e.touches[0].clientY - joystickStartY;
+            let newTop = knobStartTop + dy;
+
+            // Clamp the knob within the slider
+            newTop = Math.max(0, Math.min(newTop, sliderHeight - joystickKnob.clientHeight));
+
+            // Update knob position
+            joystickKnob.style.top = `${newTop}px`;
+
+            // Calculate scroll amount based on knob position
+            const center = (sliderHeight - joystickKnob.clientHeight) / 2;
+            const offset = newTop - center;
+            const scrollFraction = offset / center; // -1 to 1
+            const scrollAmount = scrollFraction * 50; // Adjust scroll sensitivity
+
+            // Scroll the page
+            window.scrollBy({
+                top: -scrollAmount, // Negative to match joystick direction
+                behavior: 'smooth'
+            });
+
+            e.preventDefault(); // Prevent default touch behavior
+        }, { passive: false });
+
+        document.addEventListener('touchend', (e) => {
+            if (isDraggingJoystick) {
+                isDraggingJoystick = false;
+                // Animate knob back to center
+                joystickKnob.style.transition = 'top 0.2s ease';
+                joystickKnob.style.top = `${(sliderHeight - joystickKnob.clientHeight) / 2}px`;
+                // Remove transition after animation
+                setTimeout(() => {
+                    joystickKnob.style.transition = '';
+                }, 200);
+            }
+        });
+
+        /* -------------------- End of Joystick Scroll Functions -------------------- */
 
     </script>
 </body>
