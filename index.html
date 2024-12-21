@@ -167,13 +167,14 @@
 
         /* Resize Handle Styles */
         .resize-handle {
-            width: 20px; /* Increased size for better touch interaction */
-            height: 20px;
+            width: 30px; /* Increased size for better touch interaction */
+            height: 30px;
             background-color: #fff;
             border: 2px solid #000;
             position: absolute;
             box-sizing: border-box;
             pointer-events: all; /* Allow pointer events on handles */
+            border-radius: 50%; /* Make handles circular for better UX */
         }
         .resize-handle.crop-handle {
             /* Specific styles for crop handles if needed */
@@ -280,7 +281,7 @@
         let wordGroups = []; // Each group has {text: '...', x, y, width, height}
 
         // Resize Handle Constants
-        const HANDLE_SIZE = 20; // Increased size for better touch interaction
+        const HANDLE_SIZE = 30; // Increased size for better touch interaction
         const HANDLE_OFFSET = HANDLE_SIZE / 2;
         const PADDING = HANDLE_OFFSET; // Padding to ensure handles are fully visible
 
@@ -421,8 +422,8 @@
             statusMessage.textContent = 'Image cropped. You can now perform OCR on the cropped image.';
         });
 
-        // Mouse Events for Desktop Drawing and Cropping
-        overlayCanvas.addEventListener('mousedown', (e) => {
+        // Pointer Events for Drawing and Cropping
+        overlayCanvas.addEventListener('pointerdown', (e) => {
             if (isResizing) return; // Prevent drawing when resizing
             if (isDrawingMode) {
                 isDrawing = true;
@@ -433,7 +434,7 @@
             }
         });
 
-        overlayCanvas.addEventListener('mousemove', (e) => {
+        overlayCanvas.addEventListener('pointermove', (e) => {
             if (isResizing) {
                 handleResizing(e);
                 return;
@@ -483,7 +484,7 @@
             }
         });
 
-        overlayCanvas.addEventListener('mouseup', (e) => {
+        overlayCanvas.addEventListener('pointerup', (e) => {
             if (isResizing) {
                 isResizing = false;
                 currentResizeRectIndex = -1;
@@ -504,65 +505,8 @@
             }
         });
 
-        // Touch Events for Mobile Drawing and Cropping
-        overlayCanvas.addEventListener('touchstart', (e) => {
-            if (isResizing) return; // Prevent drawing when resizing
-            if (isDrawingMode) {
-                e.preventDefault(); // Prevent scrolling
-                if (e.touches.length !== 1) return; // Only single touch
-                isDrawing = true;
-                const touch = e.touches[0];
-                const rect = overlayCanvas.getBoundingClientRect();
-                startX = (touch.clientX - rect.left);
-                startY = (touch.clientY - rect.top);
-                currentRect = { x: startX, y: startY, width: 0, height: 0 };
-            }
-        }, { passive: false });
-
-        overlayCanvas.addEventListener('touchmove', (e) => {
-            if (isResizing) {
-                handleResizingTouch(e);
-                return;
-            }
-            if (isDrawingMode) {
-                e.preventDefault(); // Prevent scrolling
-                if (e.touches.length !== 1) return; // Only single touch
-                if (!isDrawing) return;
-                const touch = e.touches[0];
-                const rect = overlayCanvas.getBoundingClientRect();
-                const touchX = (touch.clientX - rect.left);
-                const touchY = (touch.clientY - rect.top);
-
-                currentRect.width = touchX - startX;
-                currentRect.height = touchY - startY;
-
-                redrawCanvas();
-                const style = isCropMode ? 'rgba(0, 255, 0, 0.3)' : 'rgba(255, 0, 0, 0.3)';
-                const stroke = isCropMode ? 'green' : 'red';
-                drawRectangle(currentRect, style, stroke);
-            }
-        }, { passive: false });
-
-        overlayCanvas.addEventListener('touchend', (e) => {
-            if (isResizing) {
-                isResizing = false;
-                currentResizeRectIndex = -1;
-                currentHandle = null;
-                return;
-            }
-            if (isDrawingMode) {
-                if (!isDrawing) return;
-                isDrawing = false;
-                if (currentRect.width !== 0 && currentRect.height !== 0) {
-                    // Normalize rectangle dimensions
-                    const normalizedRect = normalizeRect(currentRect);
-                    rectangles.push(normalizedRect);
-                    statusMessage.textContent = `${rectangles.length} rectangle(s) drawn.`;
-                }
-                currentRect = null;
-                redrawCanvas();
-            }
-        });
+        // Pointer Events for Touch Drawing and Cropping
+        // No need for separate touch events as pointer events handle them
 
         // Perform OCR Button
         performOcrButton.addEventListener('click', async () => {
@@ -689,9 +633,11 @@
         function clearCanvas() {
             const ctx = overlayCanvas.getContext('2d');
             ctx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
-            // Remove all existing handle elements
-            const handles = overlayCanvas.parentElement.querySelectorAll('.resize-handle');
-            handles.forEach(handle => handle.remove());
+            // Remove all existing handle elements only if not resizing
+            if (!isResizing) {
+                const handles = overlayCanvas.parentElement.querySelectorAll('.resize-handle');
+                handles.forEach(handle => handle.remove());
+            }
         }
 
         // Function to Redraw Canvas
@@ -741,20 +687,15 @@
                 handleElement.style.left = `${handle.x - HANDLE_OFFSET}px`;
                 handleElement.style.top = `${handle.y - HANDLE_OFFSET}px`;
                 handleElement.style.cursor = handle.cursor;
-                handleElement.dataset.rectIndex = rectIndex;
+                handleElement.dataset.rectIndex = handleType === 'crop' ? 'crop' : rectIndex;
                 handleElement.dataset.handleType = handle.type;
                 overlayCanvas.parentElement.appendChild(handleElement);
 
-                // Add event listeners for resizing
-                handleElement.addEventListener('mousedown', (e) => {
+                // Add Pointer Event listeners for resizing
+                handleElement.addEventListener('pointerdown', (e) => {
                     e.stopPropagation();
                     startResizing(e, handle, handleType);
                 });
-                handleElement.addEventListener('touchstart', (e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    startResizing(e, handle, handleType);
-                }, { passive: false });
             });
         }
 
@@ -779,7 +720,7 @@
             for (let handle of handles) {
                 const handleX = parseFloat(handle.style.left) + HANDLE_OFFSET;
                 const handleY = parseFloat(handle.style.top) + HANDLE_OFFSET;
-                // Calculate distance from touch/mouse to handle center
+                // Calculate distance from pointer to handle center
                 const distance = Math.hypot(handleX - x, handleY - y);
                 if (distance <= HANDLE_SIZE / 2) { // Half of HANDLE_SIZE as radius
                     return {
@@ -828,8 +769,8 @@
             currentResizeRectIndex = handle.rectIndex;
             currentHandle = handle.type;
             const rect = overlayCanvas.getBoundingClientRect();
-            resizeStartX = e.clientX ? (e.clientX - rect.left) : (e.touches[0].clientX - rect.left);
-            resizeStartY = e.clientY ? (e.clientY - rect.top) : (e.touches[0].clientY - rect.top);
+            resizeStartX = (e.clientX - rect.left);
+            resizeStartY = (e.clientY - rect.top);
             if (handleType === 'crop') {
                 originalRect = { ...cropRect };
             } else {
@@ -841,16 +782,18 @@
             isCropMode = handleType === 'crop';
             drawButton.textContent = 'Draw';
             cropButton.textContent = isCropMode ? 'Cancel Crop' : 'Crop';
+
+            // Add event listeners for pointermove and pointerup to handle resizing
+            document.addEventListener('pointermove', handleResizing);
+            document.addEventListener('pointerup', stopResizing);
         }
 
-        // Function to Handle Resizing with Mouse or Touch
+        // Function to Handle Resizing with Pointer Events
         function handleResizing(e) {
             if (!isResizing) return;
             const rect = overlayCanvas.getBoundingClientRect();
-            const clientX = e.clientX !== undefined ? e.clientX : (e.touches ? e.touches[0].clientX : 0);
-            const clientY = e.clientY !== undefined ? e.clientY : (e.touches ? e.touches[0].clientY : 0);
-            const mouseX = clientX - rect.left;
-            const mouseY = clientY - rect.top;
+            const mouseX = (e.clientX - rect.left);
+            const mouseY = (e.clientY - rect.top);
 
             const deltaX = mouseX - resizeStartX;
             const deltaY = mouseY - resizeStartY;
@@ -922,82 +865,16 @@
             redrawCanvas();
         }
 
-        // Function to Handle Resizing with Touch
-        function handleResizingTouch(e) {
-            if (!isResizing) return;
-            const touch = e.touches[0];
-            const rect = overlayCanvas.getBoundingClientRect();
-            const touchX = (touch.clientX - rect.left);
-            const touchY = (touch.clientY - rect.top);
+        // Function to Stop Resizing
+        function stopResizing(e) {
+            isResizing = false;
+            currentResizeRectIndex = -1;
+            currentHandle = null;
+            originalRect = null;
 
-            const deltaX = touchX - resizeStartX;
-            const deltaY = touchY - resizeStartY;
-
-            let newRect;
-            if (currentResizeRectIndex === 'crop') {
-                newRect = { ...cropRect };
-            } else {
-                newRect = { ...rectangles[currentResizeRectIndex] };
-            }
-
-            switch (currentHandle) {
-                case 'nw':
-                    newRect.x += deltaX;
-                    newRect.y += deltaY;
-                    newRect.width -= deltaX;
-                    newRect.height -= deltaY;
-                    break;
-                case 'n':
-                    newRect.y += deltaY;
-                    newRect.height -= deltaY;
-                    break;
-                case 'ne':
-                    newRect.y += deltaY;
-                    newRect.width += deltaX;
-                    newRect.height -= deltaY;
-                    break;
-                case 'e':
-                    newRect.width += deltaX;
-                    break;
-                case 'se':
-                    newRect.width += deltaX;
-                    newRect.height += deltaY;
-                    break;
-                case 's':
-                    newRect.height += deltaY;
-                    break;
-                case 'sw':
-                    newRect.x += deltaX;
-                    newRect.width -= deltaX;
-                    newRect.height += deltaY;
-                    break;
-                case 'w':
-                    newRect.x += deltaX;
-                    newRect.width -= deltaX;
-                    break;
-            }
-
-            // Normalize the rectangle to prevent negative widths/heights
-            newRect = normalizeRect(newRect);
-
-            // Constrain the rectangle within the canvas boundaries with padding
-            newRect = constrainRect(newRect);
-
-            // Update the rectangle
-            if (currentResizeRectIndex === 'crop') {
-                cropRect = newRect;
-                // Show Confirm Crop button to apply the crop
-                confirmCropButton.style.display = 'inline-block';
-            } else {
-                rectangles[currentResizeRectIndex] = newRect;
-            }
-
-            // Update resize start positions
-            resizeStartX = touchX;
-            resizeStartY = touchY;
-
-            // Redraw canvas
-            redrawCanvas();
+            // Remove the event listeners
+            document.removeEventListener('pointermove', handleResizing);
+            document.removeEventListener('pointerup', stopResizing);
         }
 
         // Function to Normalize Rectangle (handles negative width/height)
@@ -1175,24 +1052,59 @@
         }
 
         // Prevent Scrolling When Touching the Canvas in Draw/Crop Mode
-        document.body.addEventListener('touchstart', function(e) {
+        document.body.addEventListener('pointerdown', function(e) {
             if ((isDrawingMode || isCropMode) && e.target === overlayCanvas) {
                 e.preventDefault();
             }
         }, { passive: false });
 
-        document.body.addEventListener('touchend', function(e) {
+        document.body.addEventListener('pointerup', function(e) {
             if ((isDrawingMode || isCropMode) && e.target === overlayCanvas) {
                 e.preventDefault();
             }
         }, { passive: false });
 
-        document.body.addEventListener('touchmove', function(e) {
+        document.body.addEventListener('pointermove', function(e) {
             if ((isDrawingMode || isCropMode) && e.target === overlayCanvas) {
                 e.preventDefault();
             }
         }, { passive: false });
 
+        // Function to Reset Image Display
+        function resetImageDisplay() {
+            uploadedImage.src = '';
+            imageContainer.style.display = 'none';
+            imageDataURL = null;
+            clearCanvas();
+            rectangles = [];
+            wordGroups = [];
+            cropRect = null;
+            isDrawingMode = false;
+            isCropMode = false;
+            drawButton.textContent = 'Draw';
+            cropButton.textContent = 'Crop';
+            overlayCanvas.style.cursor = 'default';
+            undoDrawButton.style.display = 'none'; // Hide Undo button
+            cropButton.style.display = 'none'; // Hide Crop button
+            confirmCropButton.style.display = 'none'; // Hide Confirm Crop button
+        }
+
+        // Function to Reset Input Fields
+        function resetFields() {
+            field1.value = '';
+            field2.value = '';
+            field3.value = '';
+            field4.value = '';
+            field5.value = '';
+            field6.value = '';
+        }
+
+        // Prevent Default Behavior on Resize Handles
+        document.addEventListener('pointerdown', function(e) {
+            if (e.target.classList.contains('resize-handle')) {
+                e.preventDefault();
+            }
+        }, { passive: false });
     </script>
 </body>
 </html>
