@@ -373,18 +373,22 @@
             isCropMode = !isCropMode;
             if (isCropMode) {
                 cropButton.textContent = 'Cancel Crop';
-                statusMessage.textContent = 'Crop mode activated. Adjust the crop boundary by resizing.';
-                overlayCanvas.style.cursor = 'default';
-                // Automatically set cropRect to image borders
+                statusMessage.textContent = 'Crop mode activated. Adjust the crop boundary as needed.';
+                overlayCanvas.style.cursor = 'move';
+                // Automatically set cropRect to image boundaries
                 cropRect = { x: 0, y: 0, width: uploadedImage.clientWidth, height: uploadedImage.clientHeight };
                 confirmCropButton.style.display = 'inline-block'; // Show Confirm Crop button
+                // Disable drawing new rectangles
+                isDrawingMode = false;
+                drawButton.textContent = 'Draw';
+                overlayCanvas.style.cursor = 'move';
                 redrawCanvas();
             } else {
                 cropButton.textContent = 'Crop';
                 statusMessage.textContent = 'Crop mode deactivated.';
-                overlayCanvas.style.cursor = 'default';
                 cropRect = null;
                 confirmCropButton.style.display = 'none'; // Hide Confirm Crop button
+                overlayCanvas.style.cursor = 'default';
                 redrawCanvas();
             }
         });
@@ -396,24 +400,23 @@
                 return;
             }
             performCrop(cropRect);
+            // Exit crop mode after cropping
             isCropMode = false;
             cropButton.textContent = 'Crop';
             confirmCropButton.style.display = 'none';
-            statusMessage.textContent = 'Image cropped successfully.';
+            statusMessage.textContent = 'Image cropped. You can now perform OCR on the cropped image.';
         });
 
         // Mouse Events for Desktop Drawing and Cropping
         overlayCanvas.addEventListener('mousedown', (e) => {
             if (isResizing) return; // Prevent drawing when resizing
-            if (isDrawingMode || (isCropMode && !isResizing)) {
-                if (!isCropMode) {
-                    isDrawing = true;
-                    const rect = overlayCanvas.getBoundingClientRect();
-                    startX = (e.clientX - rect.left);
-                    startY = (e.clientY - rect.top);
-                    currentRect = { x: startX, y: startY, width: 0, height: 0 };
-                }
-                // If in crop mode, do not allow drawing new cropRect
+            if (isDrawingMode || isCropMode) {
+                if (isCropMode && !isResizing) return; // Prevent drawing when in crop mode
+                isDrawing = true;
+                const rect = overlayCanvas.getBoundingClientRect();
+                startX = (e.clientX - rect.left);
+                startY = (e.clientY - rect.top);
+                currentRect = { x: startX, y: startY, width: 0, height: 0 };
             }
         });
 
@@ -422,19 +425,21 @@
                 handleResizing(e);
                 return;
             }
-            if (isDrawingMode) {
+            if (isDrawingMode || isCropMode) {
                 if (!isDrawing) {
                     // Change cursor based on hover over handles or rectangles
                     const rect = overlayCanvas.getBoundingClientRect();
                     const mouseX = e.clientX - rect.left;
                     const mouseY = e.clientY - rect.top;
                     const handle = getHandleAt(mouseX, mouseY);
-                    if (handle) {
+                    if (handle && isCropMode) {
                         overlayCanvas.style.cursor = handle.cursor;
-                    } else if (getRectangleAt(mouseX, mouseY) !== -1) {
+                    } else if (handle && isDrawingMode) {
+                        overlayCanvas.style.cursor = handle.cursor;
+                    } else if (!isCropMode && getRectangleAt(mouseX, mouseY) !== -1) {
                         overlayCanvas.style.cursor = 'pointer';
                     } else {
-                        overlayCanvas.style.cursor = 'crosshair';
+                        overlayCanvas.style.cursor = isDrawingMode || isCropMode ? 'crosshair' : 'default';
                     }
                     return;
                 }
@@ -446,20 +451,11 @@
                 currentRect.height = mouseY - startY;
 
                 redrawCanvas();
-                drawRectangle(currentRect, 'rgba(255, 0, 0, 0.3)', 'red');
-            } else if (isCropMode) {
-                // Change cursor based on hover over crop handles
-                const rect = overlayCanvas.getBoundingClientRect();
-                const mouseX = e.clientX - rect.left;
-                const mouseY = e.clientY - rect.top;
-                const handle = getHandleAt(mouseX, mouseY);
-                if (handle && handle.rectIndex === 'crop') {
-                    overlayCanvas.style.cursor = handle.cursor;
-                } else {
-                    overlayCanvas.style.cursor = 'default';
-                }
+                const style = isCropMode ? 'rgba(0, 255, 0, 0.3)' : 'rgba(255, 0, 0, 0.3)';
+                const stroke = isCropMode ? 'green' : 'red';
+                drawRectangle(currentRect, style, stroke);
             } else {
-                // Normal mode cursor handling
+                // Change cursor based on hover over handles or rectangles
                 const rect = overlayCanvas.getBoundingClientRect();
                 const mouseX = e.clientX - rect.left;
                 const mouseY = e.clientY - rect.top;
@@ -481,14 +477,20 @@
                 currentHandle = null;
                 return;
             }
-            if (isDrawingMode) {
+            if (isDrawingMode || isCropMode) {
                 if (!isDrawing) return;
                 isDrawing = false;
                 if (currentRect.width !== 0 && currentRect.height !== 0) {
                     // Normalize rectangle dimensions
                     const normalizedRect = normalizeRect(currentRect);
-                    rectangles.push(normalizedRect);
-                    statusMessage.textContent = `${rectangles.length} rectangle(s) drawn.`;
+                    if (isCropMode) {
+                        cropRect = normalizedRect;
+                        statusMessage.textContent = 'Crop area set. Click "Confirm Crop" to apply.';
+                        confirmCropButton.style.display = 'inline-block';
+                    } else {
+                        rectangles.push(normalizedRect);
+                        statusMessage.textContent = `${rectangles.length} rectangle(s) drawn.`;
+                    }
                 }
                 currentRect = null;
                 redrawCanvas();
@@ -498,18 +500,16 @@
         // Touch Events for Mobile Drawing and Cropping
         overlayCanvas.addEventListener('touchstart', (e) => {
             if (isResizing) return; // Prevent drawing when resizing
-            if (isDrawingMode || (isCropMode && !isResizing)) {
+            if (isDrawingMode || isCropMode) {
                 e.preventDefault(); // Prevent scrolling
                 if (e.touches.length !== 1) return; // Only single touch
-                if (!isCropMode) {
-                    isDrawing = true;
-                    const touch = e.touches[0];
-                    const rect = overlayCanvas.getBoundingClientRect();
-                    startX = (touch.clientX - rect.left);
-                    startY = (touch.clientY - rect.top);
-                    currentRect = { x: startX, y: startY, width: 0, height: 0 };
-                }
-                // If in crop mode, do not allow drawing new cropRect
+                if (isCropMode && !isResizing) return; // Prevent drawing when in crop mode
+                isDrawing = true;
+                const touch = e.touches[0];
+                const rect = overlayCanvas.getBoundingClientRect();
+                startX = (touch.clientX - rect.left);
+                startY = (touch.clientY - rect.top);
+                currentRect = { x: startX, y: startY, width: 0, height: 0 };
             }
         }, { passive: false });
 
@@ -518,9 +518,10 @@
                 handleResizingTouch(e);
                 return;
             }
-            if (isDrawingMode) {
+            if (isDrawingMode || isCropMode) {
                 e.preventDefault(); // Prevent scrolling
                 if (e.touches.length !== 1) return; // Only single touch
+                if (isCropMode && !isResizing) return; // Prevent drawing when in crop mode
                 if (!isDrawing) return;
                 const touch = e.touches[0];
                 const rect = overlayCanvas.getBoundingClientRect();
@@ -531,19 +532,9 @@
                 currentRect.height = touchY - startY;
 
                 redrawCanvas();
-                drawRectangle(currentRect, 'rgba(255, 0, 0, 0.3)', 'red');
-            } else if (isCropMode) {
-                // Handle cursor changes for crop mode
-                const touch = e.touches[0];
-                const rect = overlayCanvas.getBoundingClientRect();
-                const touchX = (touch.clientX - rect.left);
-                const touchY = (touch.clientY - rect.top);
-                const handle = getHandleAt(touchX, touchY);
-                if (handle && handle.rectIndex === 'crop') {
-                    overlayCanvas.style.cursor = handle.cursor;
-                } else {
-                    overlayCanvas.style.cursor = 'default';
-                }
+                const style = isCropMode ? 'rgba(0, 255, 0, 0.3)' : 'rgba(255, 0, 0, 0.3)';
+                const stroke = isCropMode ? 'green' : 'red';
+                drawRectangle(currentRect, style, stroke);
             }
         }, { passive: false });
 
@@ -554,14 +545,20 @@
                 currentHandle = null;
                 return;
             }
-            if (isDrawingMode) {
+            if (isDrawingMode || isCropMode) {
                 if (!isDrawing) return;
                 isDrawing = false;
                 if (currentRect.width !== 0 && currentRect.height !== 0) {
                     // Normalize rectangle dimensions
                     const normalizedRect = normalizeRect(currentRect);
-                    rectangles.push(normalizedRect);
-                    statusMessage.textContent = `${rectangles.length} rectangle(s) drawn.`;
+                    if (isCropMode) {
+                        cropRect = normalizedRect;
+                        statusMessage.textContent = 'Crop area set. Click "Confirm Crop" to apply.';
+                        confirmCropButton.style.display = 'inline-block';
+                    } else {
+                        rectangles.push(normalizedRect);
+                        statusMessage.textContent = `${rectangles.length} rectangle(s) drawn.`;
+                    }
                 }
                 currentRect = null;
                 redrawCanvas();
@@ -715,9 +712,9 @@
                 drawRectangle(group, 'rgba(0, 150, 255, 0.25)', 'rgba(0, 150, 255, 1)');
             });
             // Draw current rectangle if any
-            if (currentRect && isDrawingMode) {
-                const style = 'rgba(255, 0, 0, 0.3)';
-                const stroke = 'red';
+            if (currentRect) {
+                const style = isCropMode ? 'rgba(0, 255, 0, 0.3)' : 'rgba(255, 0, 0, 0.3)';
+                const stroke = isCropMode ? 'green' : 'red';
                 drawRectangle(currentRect, style, stroke);
             }
         }
@@ -883,6 +880,8 @@
             // Update the rectangle
             if (currentResizeRectIndex === 'crop') {
                 cropRect = newRect;
+                // Show Confirm Crop button to apply the crop
+                confirmCropButton.style.display = 'inline-block';
             } else {
                 rectangles[currentResizeRectIndex] = newRect;
             }
@@ -956,6 +955,8 @@
             // Update the rectangle
             if (currentResizeRectIndex === 'crop') {
                 cropRect = newRect;
+                // Show Confirm Crop button to apply the crop
+                confirmCropButton.style.display = 'inline-block';
             } else {
                 rectangles[currentResizeRectIndex] = newRect;
             }
@@ -979,11 +980,6 @@
                 y += height;
                 height = Math.abs(height);
             }
-            // Ensure the rectangle stays within image bounds
-            x = Math.max(0, x);
-            y = Math.max(0, y);
-            width = Math.min(width, uploadedImage.clientWidth - x);
-            height = Math.min(height, uploadedImage.clientHeight - y);
             return { x, y, width, height };
         }
 
@@ -1131,7 +1127,7 @@
             redrawCanvas();
         }
 
-        // Function to Start Resizing
+        // Function to Handle Resizing Start
         function startResizing(e, handle) {
             isResizing = true;
             currentResizeRectIndex = handle.rectIndex;
@@ -1145,7 +1141,7 @@
             }
         }
 
-        // Modify mouse and touch events to handle resizing
+        // Modify touchstart and mousedown to handle resizing
         overlayCanvas.addEventListener('mousedown', (e) => {
             if (isDrawingMode || isCropMode) return;
             if (isResizing) return;
@@ -1179,18 +1175,6 @@
         // Attach move event listeners for resizing
         overlayCanvas.addEventListener('mousemove', handleResizing);
         overlayCanvas.addEventListener('touchmove', handleResizingTouch, { passive: false });
-
-        // Function to Handle Resizing Movement
-        function handleResizingMove(e) {
-            if (!isResizing) return;
-            handleResizing(e);
-        }
-
-        // Function to Handle Resizing Movement for Touch
-        function handleResizingTouch(e) {
-            if (!isResizing) return;
-            handleResizing(e);
-        }
 
         // Prevent Scrolling When Touching the Canvas in Draw/Crop Mode
         document.body.addEventListener('touchstart', function(e) {
