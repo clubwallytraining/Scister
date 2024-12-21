@@ -239,8 +239,8 @@
         // Groups for highlighted blocks
         let wordGroups = []; // Each group has {text: '...', x, y, width, height}
 
-        // Define resize handles size
-        const HANDLE_SIZE = 10;
+        // Define resize handles size (default)
+        let HANDLE_SIZE = 10;
 
         // Handle types
         const HANDLE_TYPES = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'];
@@ -304,6 +304,23 @@
             ctx.scale(ratio, ratio);
             redrawCanvas();
         }
+
+        // Function to update HANDLE_SIZE based on screen width
+        function updateHandleSize() {
+            if (window.innerWidth <= 600) {
+                HANDLE_SIZE = 20; // Larger handles for mobile
+            } else {
+                HANDLE_SIZE = 10; // Default size for desktop
+            }
+            redrawCanvas(); // Redraw to apply new handle sizes
+        }
+
+        // Call updateHandleSize on initial load and on window resize
+        window.addEventListener('load', updateHandleSize);
+        window.addEventListener('resize', () => {
+            adjustCanvas();
+            updateHandleSize();
+        });
 
         // Event Listener for Image Upload
         imageInput.addEventListener('change', () => {
