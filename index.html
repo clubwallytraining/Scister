@@ -747,9 +747,8 @@
             }
 
             if (isDrawingMode) {
-                // Exit drawing mode before performing OCR
-                isDrawingMode = false;
-                drawButton.textContent = 'Draw';
+                // Programmatically click the "Cancel Draw" button to exit drawing mode
+                drawButton.click();
                 statusMessage.textContent = 'Drawing mode exited. Performing OCR... please wait.';
             } else {
                 statusMessage.textContent = 'Performing OCR... please wait.';
@@ -1252,16 +1251,6 @@
                 e.preventDefault();
             }
         }, { passive: false });
-
-        // Function to Process OCR Data and Group Words within Rectangles
-        // (Moved to prevent duplication and ensure single definition)
-        // Already defined above
-
-        // Function to Assign Group Text to a Field
-        // Already defined above
-
-        // Function to Draw Word Groups
-        // Already defined above
 
         /* -------------------- Postprocessing Functions -------------------- */
 
