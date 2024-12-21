@@ -16,8 +16,33 @@
             color: #e0e0e0;
             overflow-y: auto;
             display: flex;
-            flex-direction: row;
+            flex-direction: column;
             height: 100vh;
+        }
+
+        h1 {
+            font-size: 28px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        p {
+            margin-bottom: 15px;
+            text-align: center;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.5;
+        }
+
+        /* Centered Container */
+        .container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
         }
 
         /* Side Menu Styles */
@@ -35,19 +60,13 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: space-between; /* Push joystick to the bottom */
         }
 
-        #sideMenu.active {
-            left: 0;
-        }
-
-        /* Side Menu Buttons */
+        /* Button Base Styles */
         #sideMenu button {
             padding: 12px 20px;
             width: 80%;
             margin: 8px 0;
-            background-color: #333;
             color: #e0e0e0;
             border: none;
             border-radius: 4px;
@@ -56,8 +75,77 @@
             transition: background-color 0.3s, transform 0.2s;
         }
 
-        #sideMenu button:hover {
-            background-color: #444;
+        /* Specific Button Colors */
+        #draw-button {
+            background-color: #1E90FF; /* DodgerBlue */
+        }
+        #draw-button:hover {
+            background-color: #1C86EE;
+            transform: translateX(5px);
+        }
+
+        #undo-draw-button {
+            background-color: #FFA500; /* Orange */
+        }
+        #undo-draw-button:hover {
+            background-color: #FF8C00;
+            transform: translateX(5px);
+        }
+
+        #crop-button {
+            background-color: #32CD32; /* LimeGreen */
+        }
+        #crop-button:hover {
+            background-color: #2E8B57;
+            transform: translateX(5px);
+        }
+
+        #confirm-crop-button {
+            background-color: #32CD32; /* LimeGreen */
+        }
+        #confirm-crop-button:hover {
+            background-color: #2E8B57;
+            transform: translateX(5px);
+        }
+
+        #perform-ocr-button {
+            background-color: #800080; /* Purple */
+        }
+        #perform-ocr-button:hover {
+            background-color: #6A0DAD;
+            transform: translateX(5px);
+        }
+
+        #clear-image-button {
+            background-color: #FF4500; /* OrangeRed */
+        }
+        #clear-image-button:hover {
+            background-color: #E03E00;
+            transform: translateX(5px);
+        }
+
+        #update-table-button {
+            background-color: #20B2AA; /* LightSeaGreen */
+        }
+        #update-table-button:hover {
+            background-color: #1E9C9C;
+            transform: translateX(5px);
+        }
+
+        #save-csv-button {
+            background-color: #FFD700; /* Gold */
+            color: #000; /* Black text for better contrast */
+        }
+        #save-csv-button:hover {
+            background-color: #FFC107;
+            transform: translateX(5px);
+        }
+
+        #postprocessing-button {
+            background-color: #00CED1; /* DarkTurquoise */
+        }
+        #postprocessing-button:hover {
+            background-color: #00B3A1;
             transform: translateX(5px);
         }
 
@@ -93,29 +181,9 @@
             transition: 0.4s;
         }
 
-        /* Container for Main Content */
-        .container {
-            margin-left: 250px; /* Space for the side menu */
-            padding: 20px;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
-            overflow-y: auto;
-        }
-
-        h1 {
-            font-size: 28px;
-            margin-bottom: 15px;
-            text-align: center;
-        }
-
-        p {
-            margin-bottom: 15px;
-            text-align: center;
-            max-width: 800px;
-            line-height: 1.5;
+        /* Side Menu Active State */
+        #sideMenu.active {
+            left: 0;
         }
 
         /* Input Section */
@@ -222,6 +290,11 @@
             color: #e0e0e0;
         }
 
+        /* Buttons in Side Menu */
+        .buttons-container {
+            display: none; /* Hidden since moved to side menu */
+        }
+
         /* Postprocessing Controls */
         .postprocessing-controls {
             display: none;
@@ -273,60 +346,6 @@
             background-color: #2a2a2a;
         }
 
-        /* Joystick Slider Styles */
-        #joystickContainer {
-            width: 80px;
-            height: 200px;
-            background-color: rgba(0, 0, 0, 0.7);
-            border-radius: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        #joystickSlider {
-            position: relative;
-            width: 20px;
-            height: 160px;
-            background-color: #444;
-            border-radius: 10px;
-        }
-
-        #joystickKnob {
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-            top: 50%;
-            width: 40px;
-            height: 40px;
-            background-color: #555;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: top 0.2s ease;
-        }
-
-        /* Triangles Inside Joystick Knob */
-        .triangle {
-            width: 0;
-            height: 0;
-            border-left: 7px solid transparent;
-            border-right: 7px solid transparent;
-            position: absolute;
-        }
-
-        #triangleUp {
-            border-bottom: 12px solid white;
-            top: 8px;
-        }
-
-        #triangleDown {
-            border-top: 12px solid white;
-            bottom: 8px;
-        }
-
         /* Responsive Adjustments */
         @media (max-width: 600px) {
             #sideMenu {
@@ -341,34 +360,6 @@
             #sideMenu button {
                 font-size: 14px;
                 padding: 10px 15px;
-            }
-
-            #joystickContainer {
-                width: 60px;
-                height: 160px;
-            }
-
-            #joystickSlider {
-                width: 15px;
-                height: 120px;
-            }
-
-            #joystickKnob {
-                width: 30px;
-                height: 30px;
-            }
-
-            .triangle {
-                border-left: 5px solid transparent;
-                border-right: 5px solid transparent;
-            }
-
-            #triangleUp {
-                border-bottom: 10px solid white;
-            }
-
-            #triangleDown {
-                border-top: 10px solid white;
             }
         }
 
@@ -404,44 +395,32 @@
 
     <!-- Side Menu -->
     <div id="sideMenu">
-        <div>
-            <button id="draw-button" class="side-menu-button">Draw</button>
-            <button id="undo-draw-button" class="side-menu-button" style="display:none;">Undo Draw</button>
-            <button id="crop-button" class="side-menu-button">Crop</button>
-            <button id="confirm-crop-button" class="side-menu-button" style="display:none;">Confirm Crop</button>
-            <button id="perform-ocr-button" class="side-menu-button">Perform OCR</button>
-            <button id="clear-image-button" class="side-menu-button">Clear Image & Fields</button>
-            <button id="update-table-button" class="side-menu-button">Update Table</button>
-            <button id="save-csv-button" class="side-menu-button">Save CSV</button>
+        <button id="draw-button" class="side-menu-button">Draw</button>
+        <button id="undo-draw-button" class="side-menu-button" style="display:none;">Undo Draw</button>
+        <button id="crop-button" class="side-menu-button">Crop</button>
+        <button id="confirm-crop-button" class="side-menu-button" style="display:none;">Confirm Crop</button>
+        <button id="perform-ocr-button" class="side-menu-button">Perform OCR</button>
+        <button id="clear-image-button" class="side-menu-button">Clear Image & Fields</button>
+        <button id="update-table-button" class="side-menu-button">Update Table</button>
+        <button id="save-csv-button" class="side-menu-button">Save CSV</button>
 
-            <!-- Postprocessing Submenu -->
-            <button id="postprocessing-button" class="side-menu-button">Postprocessing</button>
-            <div class="postprocessing-controls" id="postprocessing-controls">
-                <label for="grayscale">Grayscale:</label>
-                <input type="checkbox" id="grayscale">
+        <!-- Postprocessing Submenu -->
+        <button id="postprocessing-button" class="side-menu-button">Postprocessing</button>
+        <div class="postprocessing-controls" id="postprocessing-controls">
+            <label for="grayscale">Grayscale:</label>
+            <input type="checkbox" id="grayscale">
 
-                <label for="highlight">Highlight:</label>
-                <input type="range" id="highlight" min="0" max="100" value="0">
+            <label for="highlight">Highlight:</label>
+            <input type="range" id="highlight" min="0" max="100" value="0">
 
-                <label for="clarity">Clarity:</label>
-                <input type="range" id="clarity" min="0" max="100" value="50">
+            <label for="clarity">Clarity:</label>
+            <input type="range" id="clarity" min="0" max="100" value="50">
 
-                <label for="brightness">Brightness:</label>
-                <input type="range" id="brightness" min="-100" max="100" value="0">
+            <label for="brightness">Brightness:</label>
+            <input type="range" id="brightness" min="-100" max="100" value="0">
 
-                <label for="sharpening">Sharpening:</label>
-                <input type="range" id="sharpening" min="0" max="100" value="0">
-            </div>
-        </div>
-
-        <!-- Joystick Slider at the Bottom of Side Menu -->
-        <div id="joystickContainer" aria-label="Scroll Joystick">
-            <div id="joystickSlider">
-                <div id="joystickKnob">
-                    <div id="triangleUp" class="triangle"></div>
-                    <div id="triangleDown" class="triangle"></div>
-                </div>
-            </div>
+            <label for="sharpening">Sharpening:</label>
+            <input type="range" id="sharpening" min="0" max="100" value="0">
         </div>
     </div>
 
@@ -496,8 +475,6 @@
         </tbody>
     </table>
 
-    <!-- Joystick Slider is now inside the Side Menu -->
-
     <script>
         // DOM Elements
         const imageInput = document.getElementById('imageInput');
@@ -538,11 +515,6 @@
         // Hamburger Menu Button
         const hamburgerBtn = document.getElementById('hamburgerBtn');
         const sideMenu = document.getElementById('sideMenu');
-
-        // Joystick Elements
-        const joystickContainer = document.getElementById('joystickContainer');
-        const joystickSlider = document.getElementById('joystickSlider');
-        const joystickKnob = document.getElementById('joystickKnob');
 
         // State Variables
         let currentWords = [];
@@ -1570,111 +1542,6 @@
 
         /* -------------------- End of Postprocessing Integration -------------------- */
 
-        /* -------------------- Joystick Scroll Functions -------------------- */
-
-        let isDraggingJoystick = false;
-        let joystickStartY = 0;
-        let knobStartTop = 0;
-        const sliderHeight = 160;
-
-        // Maximum movement from center
-        const maxOffset = sliderHeight / 2 - 20;
-
-        // Event Listeners for Joystick Knob
-        joystickKnob.addEventListener('mousedown', (e) => {
-            isDraggingJoystick = true;
-            joystickStartY = e.clientY;
-            const knobRect = joystickKnob.getBoundingClientRect();
-            knobStartTop = knobRect.top - overlayCanvas.getBoundingClientRect().top;
-            document.body.style.userSelect = 'none';
-        });
-
-        document.addEventListener('mousemove', (e) => {
-            if (!isDraggingJoystick) return;
-            const dy = e.clientY - joystickStartY;
-            let newTop = knobStartTop + dy;
-
-            // Clamp the knob within the slider
-            newTop = Math.max(0, Math.min(newTop, sliderHeight - joystickKnob.clientHeight));
-
-            // Update knob position
-            joystickKnob.style.top = `${newTop}px`;
-
-            // Calculate scroll amount based on knob position
-            const center = (sliderHeight - joystickKnob.clientHeight) / 2;
-            const offset = newTop - center;
-            const scrollFraction = offset / center;
-            const scrollAmount = scrollFraction * 50;
-
-            // Scroll the page
-            window.scrollBy({
-                top: -scrollAmount,
-                behavior: 'smooth'
-            });
-        });
-
-        document.addEventListener('mouseup', (e) => {
-            if (isDraggingJoystick) {
-                isDraggingJoystick = false;
-                // Animate knob back to center
-                joystickKnob.style.transition = 'top 0.2s ease';
-                joystickKnob.style.top = `${(sliderHeight - joystickKnob.clientHeight) / 2}px`;
-                // Remove transition after animation
-                setTimeout(() => {
-                    joystickKnob.style.transition = '';
-                }, 200);
-            }
-        });
-
-        // Touch Events for Mobile
-        joystickKnob.addEventListener('touchstart', (e) => {
-            isDraggingJoystick = true;
-            joystickStartY = e.touches[0].clientY;
-            const knobRect = joystickKnob.getBoundingClientRect();
-            knobStartTop = knobRect.top - overlayCanvas.getBoundingClientRect().top;
-            e.preventDefault();
-        }, { passive: false });
-
-        document.addEventListener('touchmove', (e) => {
-            if (!isDraggingJoystick) return;
-            const dy = e.touches[0].clientY - joystickStartY;
-            let newTop = knobStartTop + dy;
-
-            // Clamp the knob within the slider
-            newTop = Math.max(0, Math.min(newTop, sliderHeight - joystickKnob.clientHeight));
-
-            // Update knob position
-            joystickKnob.style.top = `${newTop}px`;
-
-            // Calculate scroll amount based on knob position
-            const center = (sliderHeight - joystickKnob.clientHeight) / 2;
-            const offset = newTop - center;
-            const scrollFraction = offset / center;
-            const scrollAmount = scrollFraction * 50;
-
-            // Scroll the page
-            window.scrollBy({
-                top: -scrollAmount,
-                behavior: 'smooth'
-            });
-
-            e.preventDefault();
-        }, { passive: false });
-
-        document.addEventListener('touchend', (e) => {
-            if (isDraggingJoystick) {
-                isDraggingJoystick = false;
-                // Animate knob back to center
-                joystickKnob.style.transition = 'top 0.2s ease';
-                joystickKnob.style.top = `${(sliderHeight - joystickKnob.clientHeight) / 2}px`;
-                // Remove transition after animation
-                setTimeout(() => {
-                    joystickKnob.style.transition = '';
-                }, 200);
-            }
-        });
-
-        /* -------------------- End of Joystick Scroll Functions -------------------- */
     </script>
 </body>
 </html>
