@@ -46,7 +46,7 @@
             padding: 10px;
         }
 
-        /* Side Menu Styles */
+        /* Side Menu Styles (unchanged) */
         #sideMenu {
             height: 100%;
             width: 250px;
@@ -62,8 +62,11 @@
             flex-direction: column;
             align-items: center;
         }
+        #sideMenu.active {
+            left: 0;
+        }
 
-        /* Button Base Styles */
+        /* Side Menu Buttons */
         #sideMenu button {
             padding: 12px 20px;
             width: 80%;
@@ -79,7 +82,7 @@
             text-align: center;
         }
 
-        /* Specific Button Colors */
+        /* Button Colors */
         #draw-button {
             background-color: #005cb8; 
         }
@@ -87,73 +90,65 @@
             background-color: #1C86EE;
             transform: translateX(5px);
         }
-
         #undo-draw-button {
-            background-color: #c47f00; /* Orange */
+            background-color: #c47f00; 
         }
         #undo-draw-button:hover {
             background-color: #FF8C00;
             transform: translateX(5px);
         }
-
         #crop-button {
-            background-color: #009d00; /* LimeGreen */
+            background-color: #009d00; 
         }
         #crop-button:hover {
             background-color: #2E8B57;
             transform: translateX(5px);
         }
-
         #confirm-crop-button {
-            background-color: #00e200; /* LimeGreen */
+            background-color: #00e200; 
         }
         #confirm-crop-button:hover {
             background-color: #2E8B57;
             transform: translateX(5px);
         }
-
         #perform-ocr-button {
-            background-color: #9c009c; /* Purple */
+            background-color: #9c009c; 
         }
         #perform-ocr-button:hover {
             background-color: #6A0DAD;
             transform: translateX(5px);
         }
-
         #clear-image-button {
-            background-color: #e43d00; /* OrangeRed */
+            background-color: #e43d00; 
         }
         #clear-image-button:hover {
             background-color: #E03E00;
             transform: translateX(5px);
         }
-
         #update-table-button {
-            background-color: #00958d; /* LightSeaGreen */
+            background-color: #00958d;
         }
         #update-table-button:hover {
             background-color: #1E9C9C;
             transform: translateX(5px);
         }
-
         #save-csv-button {
-            background-color: #a2a200; /* Gold */
-            color: #000; /* Black text for better contrast */
+            background-color: #a2a200; 
+            color: #000; 
         }
         #save-csv-button:hover {
             background-color: #FFC107;
             transform: translateX(5px);
         }
-
         #postprocessing-button {
-            background-color: #009da0; /* DarkTurquoise */
+            background-color: #009da0; 
         }
         #postprocessing-button:hover {
             background-color: #00B3A1;
             transform: translateX(5px);
         }
 
-        /* Hamburger Menu Button Styles */
+        /* Hamburger Menu */
         #hamburgerBtn {
             width: 50px;
             height: 50px;
@@ -166,17 +161,14 @@
             align-items: center;
             justify-content: center;
             transition: background-color 0.3s ease;
-            position: fixed; /* Fixed position */
-            top: 20px; /* 20px from top */
-            left: 20px; /* 20px from left */
-            z-index: 1100; /* Above side menu */
+            position: fixed; 
+            top: 20px; 
+            left: 20px; 
+            z-index: 1100; 
         }
-
         #hamburgerBtn:hover {
             background-color: #444;
         }
-
-        /* Hamburger Icon */
         .bar {
             display: block;
             width: 30px;
@@ -187,11 +179,6 @@
             border-radius: 2px;
         }
 
-        /* Side Menu Active State */
-        #sideMenu.active {
-            left: 0;
-        }
-
         /* Input Section */
         .input-section {
             margin-bottom: 20px;
@@ -199,14 +186,12 @@
             max-width: 600px;
             text-align: center;
         }
-
         .input-section label {
             display: block;
             margin: 10px 0 5px 0;
             font-weight: bold;
             font-size: 16px;
         }
-
         #imageInput {
             margin-bottom: 15px;
             width: 80%;
@@ -218,7 +203,6 @@
             cursor: pointer;
             font-size: 14px;
         }
-
         #imageInput::file-selector-button {
             background-color: #555;
             color: #e0e0e0;
@@ -229,7 +213,6 @@
             transition: background-color 0.3s;
             font-size: 14px;
         }
-
         #imageInput::file-selector-button:hover {
             background-color: #666;
         }
@@ -241,7 +224,6 @@
             max-width: 100%;
             margin: 0 auto;
         }
-
         #uploadedImage {
             max-width: 100%;
             border: 2px solid #333;
@@ -258,12 +240,10 @@
             width: 100%;
             height: 100%;
         }
-
         #postprocessingCanvas {
             z-index: 5;
             pointer-events: none;
         }
-
         #overlayCanvas {
             z-index: 10;
             pointer-events: auto;
@@ -284,14 +264,12 @@
             max-width: 600px;
             padding: 0 10px;
         }
-
         #fieldContainer label {
             display: block;
             margin: 10px 0 5px 0;
             font-weight: bold;
             font-size: 16px;
         }
-
         #fieldContainer input[type="text"] {
             width: 100%;
             padding: 10px;
@@ -302,11 +280,6 @@
             background-color: #2c2c2c;
             color: #e0e0e0;
             font-size: 14px;
-        }
-
-        /* Buttons in Side Menu */
-        .buttons-container {
-            display: none; /* Hidden since moved to side menu */
         }
 
         /* Postprocessing Controls */
@@ -320,7 +293,6 @@
             border-radius: 8px;
             margin-top: 10px;
         }
-
         .postprocessing-controls label {
             width: 100%;
             margin: 8px 0 4px 0;
@@ -328,7 +300,6 @@
             color: #e0e0e0;
             font-size: 14px;
         }
-
         .postprocessing-controls input[type="range"],
         .postprocessing-controls input[type="checkbox"] {
             width: 100%;
@@ -345,28 +316,24 @@
             border-radius: 8px;
             overflow: hidden;
         }
-
         #dataTable th, #dataTable td {
             padding: 12px 15px;
             text-align: left;
             border-bottom: 1px solid #333;
             font-size: 14px;
         }
-
         #dataTable th {
             background-color: #333;
             color: #e0e0e0;
         }
-
         #dataTable tr:hover {
             background-color: #2a2a2a;
         }
 
-        /* Modern Button Styles */
+        /* Modern Button Hover Effect */
         .side-menu-button {
             position: relative;
         }
-
         .side-menu-button::after {
             content: '';
             position: absolute;
@@ -377,7 +344,6 @@
             background-color: #e0e0e0;
             transition: width 0.3s;
         }
-
         .side-menu-button:hover::after {
             width: 100%;
         }
@@ -387,47 +353,39 @@
             #sideMenu {
                 width: 200px;
             }
-
             #hamburgerBtn {
                 width: 40px;
                 height: 40px;
                 top: 15px;
                 left: 15px;
             }
-
             #sideMenu button {
                 font-size: 14px;
                 padding: 10px 15px;
             }
-
             h1 {
                 font-size: 22px;
             }
-
             p {
                 font-size: 13px;
             }
-
             #fieldContainer label, .postprocessing-controls label {
                 font-size: 14px;
             }
-
             #fieldContainer input[type="text"], .postprocessing-controls input[type="range"], .postprocessing-controls input[type="checkbox"] {
                 font-size: 13px;
             }
-
             #dataTable th, #dataTable td {
                 font-size: 13px;
                 padding: 10px 12px;
             }
         }
 
-        /* Specific Styles for the Info Button */
+        /* Info Button Styles */
         #info-button {
-            background-color: #8c8c8c; /* Desired background color */
-            color: #fff;            /* Desired text color */
+            background-color: #8c8c8c; 
+            color: #fff;
         }
-
         #info-button:hover {
             background-color: #666;
         }
@@ -439,7 +397,7 @@
 
         /* Info Modal Styles */
         #infoModal {
-            display: none; /* Hidden by default */
+            display: none; 
             position: fixed; 
             z-index: 1500; 
             left: 0;
@@ -447,13 +405,11 @@
             width: 100%; 
             height: 100%;
             overflow: auto; 
-            background-color: rgba(0, 0, 0, 0.5); 
+            background-color: rgba(0, 0, 0, 0.5);
         }
-
-        /* Modal Content Box */
         #infoModalContent {
             background-color: #1e1e1e;
-            margin: 10% auto; 
+            margin: 10% auto;
             padding: 20px;
             border: 1px solid #888;
             width: 80%; 
@@ -461,8 +417,6 @@
             color: #e0e0e0;
             position: relative;
         }
-
-        /* Close Button */
         #infoModalClose {
             color: #aaa;
             float: right;
@@ -473,14 +427,13 @@
             right: 20px;
             cursor: pointer;
         }
-
         #infoModalClose:hover,
         #infoModalClose:focus {
             color: #fff;
             text-decoration: none;
         }
 
-        /* NEW EDITOR LAYOUT */
+        /* New "Open in Editor" button */
         #openEditorButton {
             display: none;
             padding: 12px 20px;
@@ -497,37 +450,65 @@
             background-color: #1C86EE;
         }
 
-        /* The Editor Container: Hidden until "Open in Editor" is pressed */
-        #editorContainer {
+        /* EDITOR MODAL (new) */
+        #editorModal {
             display: none; 
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
+            position: fixed; 
+            z-index: 1600; 
+            left: 0;
+            top: 0;
+            width: 100%; 
             height: 100%;
-            width: 100%;
+            overflow: auto; 
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+        #editorModalContent {
+            background-color: #1e1e1e;
+            margin: 3% auto; 
+            padding: 20px;
+            border: 1px solid #888;
+            width: 90%; 
+            max-width: 1200px;
+            border-radius: 8px;
+            color: #e0e0e0;
             position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+        /* Editor Close Button */
+        #editorModalClose {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            cursor: pointer;
+        }
+        #editorModalClose:hover,
+        #editorModalClose:focus {
+            color: #fff;
+            text-decoration: none;
         }
 
-        /* The Editor Toolbar (horizontally across the top) */
+        /* Editor Toolbar inside the modal content */
         #editorToolbar {
             display: flex;
-            justify-content: flex-start;
-            align-items: center;
-            width: 100%;
-            background-color: #1e1e1e;
-            padding: 10px;
-            box-sizing: border-box;
-            border-bottom: 1px solid #333;
+            flex-wrap: wrap;
             gap: 8px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #333;
+            margin-bottom: 10px;
         }
-        /* Editor Body (same area we used to show the image/canvas) */
+
+        /* Editor Body (where image and canvas remain) */
         #editorBody {
             flex: 1;
             position: relative;
-            width: 100%;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
     </style>
 </head>
@@ -539,7 +520,7 @@
         <span class="bar"></span>
     </button>
 
-    <!-- Side Menu (kept intact, will be hidden in editor mode) -->
+    <!-- Side Menu (unchanged) -->
     <div id="sideMenu">
         <button id="draw-button" class="side-menu-button">Draw</button>
         <button id="undo-draw-button" class="side-menu-button" style="display:none;">Undo Draw</button>
@@ -572,7 +553,7 @@
         <button id="info-button" class="side-menu-button">Info</button>
     </div>
 
-    <!-- Info Modal Structure -->
+    <!-- Info Modal -->
     <div id="infoModal">
         <div id="infoModalContent">
             <span id="infoModalClose">&times;</span>
@@ -590,20 +571,31 @@
         </div>
     </div>
 
+    <!-- The Editor Modal -->
+    <div id="editorModal">
+        <div id="editorModalContent">
+            <span id="editorModalClose">&times;</span>
+            <!-- Editor Toolbar inside the modal -->
+            <div id="editorToolbar"></div>
+            <!-- Editor Body -->
+            <div id="editorBody">
+                <!-- We'll just keep the same imageContainer, so the user sees it in the background. 
+                     But you could also physically move or clone it here if you prefer. -->
+            </div>
+        </div>
+    </div>
+
     <div class="container">
         <h1>OCR Image Processor</h1>
         <br><br>
-        <!--Main Input Section -->
         <div class="input-section">
             <label for="imageInput">Upload Image:</label>
             <input type="file" id="imageInput" accept="image/*">
 
-            <!-- NEW: Open in Editor Button -->
             <button id="openEditorButton">Open in Editor</button>
 
             <div id="imageContainer">
                 <img id="uploadedImage" alt="Uploaded Image">
-                <!-- Postprocessing Canvas -->
                 <canvas id="postprocessingCanvas"></canvas>
                 <canvas id="overlayCanvas"></canvas>
             </div>
@@ -640,22 +632,9 @@
             </tr>
         </thead>
         <tbody>
-            <!-- Rows will be appended here -->
+            <!-- Rows appended here -->
         </tbody>
     </table>
-
-    <!-- NEW: Editor Container -->
-    <div id="editorContainer">
-        <div id="editorToolbar">
-            <!-- We will move the existing side menu buttons into here when "Open in Editor" is clicked -->
-        </div>
-        <div id="editorBody">
-            <!-- The same image/canvas from above will remain on the page, so we just rely on the existing elements -->
-            <!-- If you'd prefer the image/canvas be shown *only* in the editor view, 
-                 you could physically place them here or clone them. 
-                 For simplicity, we will just keep them in the same place. -->
-        </div>
-    </div>
 
     <script>
         // DOM Elements
@@ -676,10 +655,11 @@
         const clearImageButton = document.getElementById('clear-image-button');
         const updateTableButton = document.getElementById('update-table-button');
         const saveCsvButton = document.getElementById('save-csv-button');
-
-        // Postprocessing Controls
         const postprocessingButton = document.getElementById('postprocessing-button');
         const postprocessingControls = document.getElementById('postprocessing-controls');
+        const infoButton = document.getElementById('info-button');
+
+        // Postprocessing Inputs
         const grayscaleCheckbox = document.getElementById('grayscale');
         const highlightSlider = document.getElementById('highlight');
         const claritySlider = document.getElementById('clarity');
@@ -694,21 +674,24 @@
         const field5 = document.getElementById('field5');
         const field6 = document.getElementById('field6');
 
-        // Hamburger Menu Button
+        // Hamburger and Side Menu
         const hamburgerBtn = document.getElementById('hamburgerBtn');
         const sideMenu = document.getElementById('sideMenu');
 
-        // Info Modal Elements
-        const infoButton = document.getElementById('info-button');
+        // Info Modal
         const infoModal = document.getElementById('infoModal');
         const infoModalClose = document.getElementById('infoModalClose');
 
-        // NEW: Editor Elements
-        const openEditorButton = document.getElementById('openEditorButton');
-        const editorContainer = document.getElementById('editorContainer');
+        // Editor Modal
+        const editorModal = document.getElementById('editorModal');
+        const editorModalContent = document.getElementById('editorModalContent');
+        const editorModalClose = document.getElementById('editorModalClose');
         const editorToolbar = document.getElementById('editorToolbar');
 
-        // State Variables
+        // New "Open in Editor" button
+        const openEditorButton = document.getElementById('openEditorButton');
+
+        // State
         let userRectangles = []; 
         let rectangleTexts = {}; 
         let imageDataURL = null;
@@ -729,18 +712,16 @@
         let handlesVisible = true;
         let initialRect = null;
 
-        /* -------------------- Side Menu Toggle -------------------- */
+        /* ========== HAMBURGER / SIDE MENU ========== */
         function toggleSideMenu() {
             sideMenu.classList.toggle('active');
         }
         hamburgerBtn.addEventListener('click', toggleSideMenu);
-
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && sideMenu.classList.contains('active')) {
                 sideMenu.classList.remove('active');
             }
         });
-
         window.addEventListener('click', (e) => {
             if (!sideMenu.contains(e.target) && e.target !== hamburgerBtn) {
                 if (sideMenu.classList.contains('active')) {
@@ -748,75 +729,27 @@
                 }
             }
         });
-        /* -------------------- End Side Menu Toggle -------------------- */
 
-        /* -------------------- Info Modal Logic -------------------- */
+        /* ========== INFO MODAL ========== */
         infoButton.addEventListener('click', () => {
             infoModal.style.display = 'block';
         });
-
         infoModalClose.addEventListener('click', () => {
             infoModal.style.display = 'none';
         });
-
         window.addEventListener('click', (event) => {
             if (event.target == infoModal) {
                 infoModal.style.display = 'none';
             }
         });
-        /* -------------------- End Info Modal Logic -------------------- */
 
-        /* -------------------- Postprocessing Toggle -------------------- */
+        /* ========== POSTPROCESSING TOGGLE ========== */
         postprocessingButton.addEventListener('click', () => {
             postprocessingControls.style.display = 
                 postprocessingControls.style.display === 'flex' ? 'none' : 'flex';
         });
-        /* -------------------- End Postprocessing Toggle -------------------- */
 
-        /* -------------------- Canvas Adjustments -------------------- */
-        function adjustCanvas() {
-            const ratio = window.devicePixelRatio || 1;
-
-            postprocessingCanvas.width = uploadedImage.clientWidth * ratio;
-            postprocessingCanvas.height = uploadedImage.clientHeight * ratio;
-            postprocessingCanvas.style.width = `${uploadedImage.clientWidth}px`;
-            postprocessingCanvas.style.height = `${uploadedImage.clientHeight}px`;
-            const ppCtx = postprocessingCanvas.getContext('2d');
-            ppCtx.scale(ratio, ratio);
-
-            overlayCanvas.width = uploadedImage.clientWidth * ratio;
-            overlayCanvas.height = uploadedImage.clientHeight * ratio;
-            overlayCanvas.style.width = `${uploadedImage.clientWidth}px`;
-            overlayCanvas.style.height = `${uploadedImage.clientHeight}px`;
-            const ovCtx = overlayCanvas.getContext('2d');
-            ovCtx.scale(ratio, ratio);
-
-            // After adjusting, redraw postprocessing
-            applyPostprocessing();
-        }
-
-        function updateHandleSize() {
-            if (window.innerWidth <= 600) {
-                HANDLE_SIZE = 20;
-            } else {
-                HANDLE_SIZE = 10;
-            }
-            redrawCanvas();
-        }
-
-        window.addEventListener('load', () => {
-            updateHandleSize();
-            if (uploadedImage.complete && uploadedImage.naturalWidth !== 0) {
-                applyPostprocessing();
-            }
-        });
-        window.addEventListener('resize', () => {
-            adjustCanvas();
-            updateHandleSize();
-        });
-        /* -------------------- End Canvas Adjustments -------------------- */
-
-        /* -------------------- Image Upload Logic -------------------- */
+        /* ========== IMAGE UPLOAD ========== */
         imageInput.addEventListener('change', () => {
             const file = imageInput.files[0];
             if (!file) {
@@ -842,25 +775,20 @@
                     redrawCanvas();
                     applyPostprocessing();
 
-                    // NEW: Reveal "Open in Editor" button after an image is uploaded
+                    // Reveal the "Open in Editor" button now that an image is loaded
                     openEditorButton.style.display = 'inline-block';
                 };
             };
             reader.readAsDataURL(file);
         });
-        /* -------------------- End Image Upload Logic -------------------- */
 
-        /* -------------------- Open Editor Logic -------------------- */
+        /* ========== OPEN EDITOR (MODAL) ========== */
         openEditorButton.addEventListener('click', () => {
-            // Hide side menu and hamburger
-            sideMenu.style.display = 'none';
-            hamburgerBtn.style.display = 'none';
+            // Show the Editor Modal
+            editorModal.style.display = 'block';
 
-            // Show editor container
-            editorContainer.style.display = 'flex';
-
-            // Move all existing buttons from side menu into the editor toolbar
-            // This physically reuses the same elements and IDs, so all event listeners remain intact.
+            // Move all side menu buttons into the editorToolbar
+            // This ensures the same IDs (event listeners remain).
             editorToolbar.appendChild(drawButton);
             editorToolbar.appendChild(undoDrawButton);
             editorToolbar.appendChild(cropButton);
@@ -871,10 +799,56 @@
             editorToolbar.appendChild(saveCsvButton);
             editorToolbar.appendChild(postprocessingButton);
             editorToolbar.appendChild(infoButton);
-        });
-        /* -------------------- End Open Editor Logic -------------------- */
 
-        /* -------------------- Drawing and Cropping -------------------- */
+            // Hide the hamburger and sidemenu so it's out of sight
+            sideMenu.style.display = 'none';
+            hamburgerBtn.style.display = 'none';
+        });
+
+        // Close Editor Modal
+        editorModalClose.addEventListener('click', () => {
+            editorModal.style.display = 'none';
+
+            // Return the buttons to the side menu
+            sideMenu.appendChild(drawButton);
+            sideMenu.appendChild(undoDrawButton);
+            sideMenu.appendChild(cropButton);
+            sideMenu.appendChild(confirmCropButton);
+            sideMenu.appendChild(performOcrButton);
+            sideMenu.appendChild(clearImageButton);
+            sideMenu.appendChild(updateTableButton);
+            sideMenu.appendChild(saveCsvButton);
+            sideMenu.appendChild(postprocessingButton);
+            sideMenu.appendChild(infoButton);
+
+            // Bring back the hamburger button & side menu
+            sideMenu.style.display = 'flex';
+            hamburgerBtn.style.display = 'block';
+        });
+
+        // Close Editor Modal if user clicks outside
+        window.addEventListener('click', (event) => {
+            if (event.target === editorModal) {
+                editorModal.style.display = 'none';
+
+                // Move buttons back to side menu
+                sideMenu.appendChild(drawButton);
+                sideMenu.appendChild(undoDrawButton);
+                sideMenu.appendChild(cropButton);
+                sideMenu.appendChild(confirmCropButton);
+                sideMenu.appendChild(performOcrButton);
+                sideMenu.appendChild(clearImageButton);
+                sideMenu.appendChild(updateTableButton);
+                sideMenu.appendChild(saveCsvButton);
+                sideMenu.appendChild(postprocessingButton);
+                sideMenu.appendChild(infoButton);
+
+                sideMenu.style.display = 'flex';
+                hamburgerBtn.style.display = 'block';
+            }
+        });
+
+        /* ========== DRAWING / CROPPING ========== */
         drawButton.addEventListener('click', () => {
             if (!imageDataURL) {
                 alert('Please upload an image first.');
@@ -953,6 +927,7 @@
             undoDrawButton.style.display = userRectangles.length > 0 ? 'block' : 'none';
         });
 
+        /* ========== MOUSE EVENTS FOR DRAWING ========== */
         overlayCanvas.addEventListener('mousedown', (e) => {
             const rect = overlayCanvas.getBoundingClientRect();
             const x = (e.clientX - rect.left);
@@ -961,7 +936,6 @@
             const handleInfo = getHandleAt(x, y);
             if (handleInfo) {
                 if (handleInfo.type === 'sw') {
-                    // Resizing
                     isResizing = true;
                     activeHandle = handleInfo.type;
                     resizeTarget = handleInfo.rect === 'crop' ? 'crop' : handleInfo.index;
@@ -971,7 +945,6 @@
                         initialRect = { ...userRectangles[resizeTarget] };
                     }
                 } else if (handleInfo.type === 'ne') {
-                    // Moving
                     isMoving = true;
                     resizeTarget = handleInfo.rect === 'crop' ? 'crop' : handleInfo.index;
                     if (resizeTarget === 'crop') {
@@ -1004,13 +977,11 @@
                 redrawCanvas();
                 return;
             }
-
             if (isMoving) {
                 moveRectangle(x, y);
                 redrawCanvas();
                 return;
             }
-
             if (isDrawing && currentRect) {
                 currentRect.width = x - startX;
                 currentRect.height = y - startY;
@@ -1031,14 +1002,12 @@
                 statusMessage.textContent = 'Rectangle resized.';
                 return;
             }
-
             if (isMoving) {
                 isMoving = false;
                 resizeTarget = null;
                 statusMessage.textContent = 'Rectangle moved.';
                 return;
             }
-
             if (isDrawing && currentRect) {
                 isDrawing = false;
                 const normalizedRect = normalizeRect(currentRect);
@@ -1061,7 +1030,7 @@
             }
         });
 
-        /* -------------------- Touch Events for Mobile -------------------- */
+        /* ========== TOUCH EVENTS ========== */
         overlayCanvas.addEventListener('touchstart', (e) => {
             if (!(isDrawingMode || isCroppingMode)) return;
             e.preventDefault();
@@ -1117,13 +1086,11 @@
                 redrawCanvas();
                 return;
             }
-
             if (isMoving) {
                 moveRectangle(x, y);
                 redrawCanvas();
                 return;
             }
-
             if (isDrawing && currentRect) {
                 currentRect.width = x - startX;
                 currentRect.height = y - startY;
@@ -1144,14 +1111,12 @@
                 statusMessage.textContent = 'Rectangle resized.';
                 return;
             }
-
             if (isMoving) {
                 isMoving = false;
                 resizeTarget = null;
                 statusMessage.textContent = 'Rectangle moved.';
                 return;
             }
-
             if (isDrawing && currentRect) {
                 isDrawing = false;
                 const normalizedRect = normalizeRect(currentRect);
@@ -1173,66 +1138,8 @@
                 redrawCanvas();
             }
         });
-        /* -------------------- End Drawing and Cropping -------------------- */
 
-        /* -------------------- Helper: Move/Resize Rectangle -------------------- */
-        function moveRectangle(x, y) {
-            if (resizeTarget === 'crop') {
-                if (!cropRect) return;
-                cropRect.x = x - moveOffset.x;
-                cropRect.y = y - moveOffset.y;
-                cropRect = normalizeRect(cropRect);
-            } else if (typeof resizeTarget === 'number') {
-                const rect = userRectangles[resizeTarget];
-                if (!rect) return;
-                rect.x = x - moveOffset.x;
-                rect.y = y - moveOffset.y;
-                userRectangles[resizeTarget] = normalizeRect(rect);
-            }
-        }
-
-        function resizeRectangle(x, y) {
-            if (!handlesVisible) return;
-            if (resizeTarget === 'crop') {
-                if (!cropRect || !activeHandle || !initialRect) return;
-                switch (activeHandle) {
-                    case 'sw':
-                        const newX = x;
-                        const newY = y;
-                        const newWidth = initialRect.width + (initialRect.x - newX);
-                        const newHeight = initialRect.height + (initialRect.y - newY);
-                        if (newWidth > 20 && newHeight > 20) {
-                            cropRect.x = newX;
-                            cropRect.y = newY;
-                            cropRect.width = newWidth;
-                            cropRect.height = newHeight;
-                        }
-                        break;
-                }
-                cropRect = normalizeRect(cropRect);
-            } else if (typeof resizeTarget === 'number') {
-                const rect = userRectangles[resizeTarget];
-                if (!rect || !activeHandle || !initialRect) return;
-                switch (activeHandle) {
-                    case 'sw':
-                        const newX = x;
-                        const newY = y;
-                        const newWidth = initialRect.width + (initialRect.x - newX);
-                        const newHeight = initialRect.height + (initialRect.y - newY);
-                        if (newWidth > 20 && newHeight > 20) {
-                            rect.x = newX;
-                            rect.y = newY;
-                            rect.width = newWidth;
-                            rect.height = newHeight;
-                        }
-                        break;
-                }
-                userRectangles[resizeTarget] = normalizeRect(rect);
-            }
-        }
-        /* -------------------- End Helper: Move/Resize Rectangle -------------------- */
-
-        /* -------------------- Perform OCR -------------------- */
+        /* ========== OCR ========== */
         performOcrButton.addEventListener('click', async () => {
             if (!imageDataURL) {
                 alert('Please select an image first.');
@@ -1264,7 +1171,6 @@
             statusMessage.textContent = 'OCR complete. Click on highlighted areas to assign fields.';
             redrawCanvas();
         });
-
         async function performOCROnRectangle(rect) {
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
@@ -1279,7 +1185,6 @@
 
             canvas.width = cropWidth;
             canvas.height = cropHeight;
-
             ctx.drawImage(uploadedImage, cropX, cropY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
             const croppedDataURL = canvas.toDataURL();
 
@@ -1293,9 +1198,8 @@
 
             return data.text.trim();
         }
-        /* -------------------- End Perform OCR -------------------- */
 
-        /* -------------------- Click to Assign Text -------------------- */
+        /* ========== ASSIGN TEXT ========== */
         overlayCanvas.addEventListener('click', (e) => {
             if (userRectangles.length === 0) return;
             const rect = overlayCanvas.getBoundingClientRect();
@@ -1315,9 +1219,8 @@
                 }
             }
         });
-        /* -------------------- End Click to Assign Text -------------------- */
 
-        /* -------------------- Clear, Update Table, Save CSV -------------------- */
+        /* ========== CLEAR, UPDATE TABLE, SAVE CSV ========== */
         clearImageButton.addEventListener('click', () => {
             resetImageDisplay();
             resetFields();
@@ -1374,9 +1277,8 @@
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
         });
-        /* -------------------- End Clear, Update Table, Save CSV -------------------- */
 
-        /* -------------------- Utility Functions -------------------- */
+        /* ========== UTILITY FUNCTIONS ========== */
         function resetImageDisplay() {
             uploadedImage.src = '';
             imageContainer.style.display = 'none';
@@ -1392,19 +1294,16 @@
             confirmCropButton.style.display = 'none';
             handlesVisible = true;
             undoDrawButton.style.display = 'none';
-
             const ppCtx = postprocessingCanvas.getContext('2d');
             ppCtx.clearRect(0, 0, postprocessingCanvas.width, postprocessingCanvas.height);
 
             // Hide the "Open in Editor" button again
             openEditorButton.style.display = 'none';
 
-            // If user had opened the editor, revert everything back
-            editorContainer.style.display = 'none';
-            sideMenu.style.display = 'flex';
-            hamburgerBtn.style.display = 'block';
+            // If editor modal is open, close it
+            editorModal.style.display = 'none';
 
-            // Move the buttons back into the side menu if they are in editorToolbar
+            // Move buttons back if they are inside the editor modal
             if (editorToolbar.contains(drawButton)) {
                 sideMenu.appendChild(drawButton);
                 sideMenu.appendChild(undoDrawButton);
@@ -1417,8 +1316,10 @@
                 sideMenu.appendChild(postprocessingButton);
                 sideMenu.appendChild(infoButton);
             }
-        }
 
+            sideMenu.style.display = 'flex';
+            hamburgerBtn.style.display = 'block';
+        }
         function resetFields() {
             field1.value = '';
             field2.value = '';
@@ -1427,12 +1328,10 @@
             field5.value = '';
             field6.value = '';
         }
-
         function clearCanvas() {
             const ctx = overlayCanvas.getContext('2d');
             ctx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
         }
-
         function redrawCanvas() {
             clearCanvas();
             userRectangles.forEach((rect, index) => {
@@ -1458,7 +1357,6 @@
                 drawRectangle(currentRect, style.fill, style.stroke);
             }
         }
-
         function drawRectangle(rect, fillStyle, strokeStyle) {
             const ctx = overlayCanvas.getContext('2d');
             ctx.fillStyle = fillStyle;
@@ -1467,14 +1365,12 @@
             ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
             ctx.strokeRect(rect.x, rect.y, rect.width, rect.height);
         }
-
         function getHandlePositions(rect) {
             return {
                 sw: { x: rect.x, y: rect.y + rect.height },
                 ne: { x: rect.x + rect.width, y: rect.y }
             };
         }
-
         function drawHandles(rect, index) {
             const ctx = overlayCanvas.getContext('2d');
             const handles = getHandlePositions(rect);
@@ -1486,7 +1382,6 @@
                 ctx.strokeRect(handle.x - HANDLE_SIZE / 2, handle.y - HANDLE_SIZE / 2, HANDLE_SIZE, HANDLE_SIZE);
             });
         }
-
         function getHandleAt(x, y) {
             if (cropRect) {
                 const handle = getHandlePositions(cropRect);
@@ -1519,7 +1414,6 @@
             }
             return null;
         }
-
         function normalizeRect(rect) {
             let { x, y, width, height } = rect;
             if (width < 0) {
@@ -1536,7 +1430,6 @@
             height = Math.min(height, uploadedImage.clientHeight - y);
             return { x, y, width, height };
         }
-
         function performCrop(rect) {
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
@@ -1551,10 +1444,9 @@
 
             canvas.width = cropWidth;
             canvas.height = cropHeight;
-
             ctx.drawImage(uploadedImage, cropX, cropY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
-            const croppedDataURL = canvas.toDataURL();
 
+            const croppedDataURL = canvas.toDataURL();
             uploadedImage.src = croppedDataURL;
             imageDataURL = croppedDataURL;
 
@@ -1572,11 +1464,48 @@
             };
         }
 
-        /* -------------------- Postprocessing -------------------- */
+        /* ========== CANVAS ADJUSTMENTS ========== */
+        window.addEventListener('load', () => {
+            updateHandleSize();
+            if (uploadedImage.complete && uploadedImage.naturalWidth !== 0) {
+                applyPostprocessing();
+            }
+        });
+        window.addEventListener('resize', () => {
+            adjustCanvas();
+            updateHandleSize();
+        });
+        function adjustCanvas() {
+            const ratio = window.devicePixelRatio || 1;
+            postprocessingCanvas.width = uploadedImage.clientWidth * ratio;
+            postprocessingCanvas.height = uploadedImage.clientHeight * ratio;
+            postprocessingCanvas.style.width = `${uploadedImage.clientWidth}px`;
+            postprocessingCanvas.style.height = `${uploadedImage.clientHeight}px`;
+            const ppCtx = postprocessingCanvas.getContext('2d');
+            ppCtx.scale(ratio, ratio);
+
+            overlayCanvas.width = uploadedImage.clientWidth * ratio;
+            overlayCanvas.height = uploadedImage.clientHeight * ratio;
+            overlayCanvas.style.width = `${uploadedImage.clientWidth}px`;
+            overlayCanvas.style.height = `${uploadedImage.clientHeight}px`;
+            const ovCtx = overlayCanvas.getContext('2d');
+            ovCtx.scale(ratio, ratio);
+
+            applyPostprocessing();
+        }
+        function updateHandleSize() {
+            if (window.innerWidth <= 600) {
+                HANDLE_SIZE = 20;
+            } else {
+                HANDLE_SIZE = 10;
+            }
+            redrawCanvas();
+        }
+
+        /* ========== POSTPROCESSING ========== */
         function applyPostprocessing() {
             if (!uploadedImage.src) return;
             const ppCtx = postprocessingCanvas.getContext('2d');
-
             ppCtx.clearRect(0, 0, postprocessingCanvas.width, postprocessingCanvas.height);
             ppCtx.drawImage(uploadedImage, 0, 0, uploadedImage.clientWidth, uploadedImage.clientHeight);
 
@@ -1632,18 +1561,12 @@
             imageDataURL = postprocessingCanvas.toDataURL();
             redrawCanvas();
         }
-
         function applySharpeningFilter(ctx, intensity) {
             const imageData = ctx.getImageData(0, 0, postprocessingCanvas.width, postprocessingCanvas.height);
             const data = imageData.data;
             const width = imageData.width;
             const height = imageData.height;
-
-            const kernel = [
-                0, -1, 0,
-                -1, 5, -1,
-                0, -1, 0
-            ];
+            const kernel = [ 0, -1, 0, -1, 5, -1, 0, -1, 0 ];
             const side = Math.round(Math.sqrt(kernel.length));
             const halfSide = Math.floor(side / 2);
             const src = data;
@@ -1682,14 +1605,7 @@
             ctx.putImageData(imageData, 0, 0);
         }
 
-        grayscaleCheckbox.addEventListener('change', applyPostprocessing);
-        highlightSlider.addEventListener('input', applyPostprocessing);
-        claritySlider.addEventListener('input', applyPostprocessing);
-        brightnessSlider.addEventListener('input', applyPostprocessing);
-        sharpeningSlider.addEventListener('input', applyPostprocessing);
-        /* -------------------- End Postprocessing -------------------- */
-
-        /* -------------------- Assign Text to Fields -------------------- */
+        /* ========== ASSIGN TEXT TO FIELD ========== */
         function assignTextToField(text) {
             const choice = prompt(
                 `Choose a field to assign this text:\n` +
@@ -1707,7 +1623,6 @@
                 alert('Invalid choice.');
                 return;
             }
-
             let targetField;
             switch (num) {
                 case 1: targetField = field1; break;
@@ -1719,7 +1634,6 @@
             }
             targetField.value = text;
         }
-        /* -------------------- End Assign Text to Fields -------------------- */
     </script>
 </body>
 </html>
