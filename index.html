@@ -7,27 +7,24 @@
   <!-- Tesseract.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
   <style>
-    /* 1) Root and Body: 
-       - 100% width, no horizontal scroll 
-       - vertical scrolling if needed 
-       - mobile-friendly scaling 
+    /* Body & Root: 
+       - 100% width, no horizontal scroll
+       - vertical scroll if needed
+       - Mobile-friendly scaling
     */
     html, body {
       margin: 0;
       padding: 0;
       width: 100%;
       min-height: 100vh;
-      overflow-x: hidden;  /* no horizontal scroll */
-      overflow-y: auto;    /* vertical scroll if content exceeds screen height */
+      overflow-x: hidden;
+      overflow-y: auto;
       background-color: #121212;
       color: #e0e0e0;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
 
-    /* 2) Container: 
-       - For mobile, keep everything fluid 
-       - Center content, no big max-width 
-    */
+    /* Container for the main page content */
     .container {
       display: flex;
       flex-direction: column;
@@ -51,7 +48,7 @@
       margin-right: auto;
     }
 
-    /* 3) Side Menu (fixed off-screen by default) */
+    /* Side Menu: fixed off to the left by default */
     #sideMenu {
       position: fixed;
       top: 0;
@@ -70,7 +67,6 @@
     #sideMenu.active {
       left: 0;
     }
-    /* Buttons in the Side Menu */
     #sideMenu button {
       padding: 12px 20px;
       width: 80%;
@@ -138,7 +134,7 @@
     }
     #save-csv-button {
       background-color: #a2a200; 
-      color: #000; 
+      color: #000;
     }
     #save-csv-button:hover {
       background-color: #FFC107;
@@ -152,7 +148,7 @@
       transform: translateX(5px);
     }
 
-    /* Hamburger Menu Button */
+    /* Hamburger Menu (top-left) */
     #hamburgerBtn {
       position: fixed;
       top: 20px;
@@ -223,22 +219,22 @@
     /* Image Container */
     #imageContainer {
       position: relative;
-      display: none; 
-      width: 100%;     /* Fill parent */
-      max-width: 100%; /* No horizontal overflow */
-      margin: 0 auto; 
+      display: none;
+      width: 100%;
+      max-width: 100%;
+      margin: 0 auto;
     }
+    /* Force the image to scale fully to container width */
     #uploadedImage {
       display: block;
-      width: 100%;       /* Make the image scale to container */
-      height: auto;      /* Maintain aspect ratio */
+      width: 100%;
+      height: auto;
       border: 2px solid #333;
       border-radius: 8px;
     }
 
     /* Canvas Overlays */
-    #postprocessingCanvas,
-    #overlayCanvas {
+    #postprocessingCanvas, #overlayCanvas {
       position: absolute;
       top: 0;
       left: 0;
@@ -322,8 +318,7 @@
       border-radius: 8px;
       overflow: hidden;
     }
-    #dataTable th,
-    #dataTable td {
+    #dataTable th, #dataTable td {
       padding: 12px 15px;
       text-align: left;
       border-bottom: 1px solid #333;
@@ -345,8 +340,7 @@
     #info-button:hover {
       background-color: #666;
     }
-    #info-button:active,
-    #info-button:focus {
+    #info-button:active, #info-button:focus {
       background-color: #777;
       outline: none;
     }
@@ -383,8 +377,7 @@
       right: 20px;
       cursor: pointer;
     }
-    #infoModalClose:hover,
-    #infoModalClose:focus {
+    #infoModalClose:hover, #infoModalClose:focus {
       color: #fff;
       text-decoration: none;
     }
@@ -406,7 +399,7 @@
       background-color: #1C86EE;
     }
 
-    /* Editor Modal: Fullscreen for mobile */
+    /* Editor Modal: Fullscreen for Mobile */
     #editorModal {
       display: none;
       position: fixed;
@@ -415,20 +408,22 @@
       top: 0;
       width: 100%;
       height: 100%;
-      overflow: auto; 
+      overflow: hidden; /* No scrolling in the editor */
       background-color: rgba(0, 0, 0, 0.7);
     }
+
+    /* Editor Modal Content: fill entire screen */
     #editorModalContent {
-      background-color: #1e1e1e;
-      margin: 0 auto; /* For mobile, it's full width anyway */
-      padding: 20px;
-      border: 1px solid #888;
       width: 100%;
       height: 100%;
-      max-width: none; /* Let it fill entire screen */
-      border-radius: 0; 
-      color: #e0e0e0;
+      max-width: none; 
+      max-height: none;
+      margin: 0 auto;
+      padding: 0;
+      border: none;
+      border-radius: 0;
       position: relative;
+      background-color: #1e1e1e;
       display: flex;
       flex-direction: column;
     }
@@ -440,23 +435,23 @@
       top: 10px;
       right: 20px;
       cursor: pointer;
+      z-index: 10; /* Above toolbar */
     }
-    #editorModalClose:hover,
-    #editorModalClose:focus {
+    #editorModalClose:hover, #editorModalClose:focus {
       color: #fff;
       text-decoration: none;
     }
 
-    /* Editor Toolbar: horizontal scroll for mobile */
+    /* Editor Toolbar: pinned at the top, measure its height to fit the image below it. */
     #editorToolbar {
       display: flex;
       flex-wrap: nowrap;
       gap: 8px;
-      padding-bottom: 10px;
-      border-bottom: 1px solid #333;
-      margin-bottom: 10px;
       overflow-x: auto;
       overflow-y: hidden;
+      background-color: #1e1e1e;
+      border-bottom: 1px solid #333;
+      padding: 10px;
     }
     #editorToolbar::-webkit-scrollbar {
       height: 6px;
@@ -466,20 +461,21 @@
       border-radius: 3px;
     }
 
-    /* Editor Body: fill the rest of the modal */
+    /* Editor Body: the rest of the height below the toolbar. We'll measure the toolbar in JS. */
     #editorBody {
-      flex: 1;
       position: relative;
+      flex: 1;
       display: flex;
       justify-content: center;
       align-items: center;
-      overflow: auto;
-      width: 100%;
+      overflow: hidden; /* no scroll here if image fits perfectly */
+      background-color: #1e1e1e;
     }
   </style>
 </head>
 <body>
-  <!-- Hamburger Menu -->
+
+  <!-- Hamburger -->
   <button id="hamburgerBtn" aria-label="Toggle Side Menu">
     <span class="bar"></span>
     <span class="bar"></span>
@@ -548,7 +544,6 @@
   <!-- Main Container -->
   <div class="container" id="mainContainer">
     <h1>OCR Image Processor (Mobile‑Only)</h1>
-    <br>
     <div class="input-section">
       <label for="imageInput">Upload Image:</label>
       <input type="file" id="imageInput" accept="image/*">
@@ -714,11 +709,8 @@
      * Postprocessing Toggle
      *********************************************************/
     postprocessingButton.addEventListener('click', () => {
-      if (postprocessingControls.style.display === 'flex') {
-        postprocessingControls.style.display = 'none';
-      } else {
-        postprocessingControls.style.display = 'flex';
-      }
+      postprocessingControls.style.display = 
+        postprocessingControls.style.display === 'flex' ? 'none' : 'flex';
     });
 
     /*********************************************************
@@ -759,12 +751,13 @@
      * Editor Modal
      *********************************************************/
     openEditorButton.addEventListener('click', () => {
+      /* Show the editor full screen */
       editorModal.style.display = 'block';
 
-      /* Move #imageContainer into the editor */
+      /* Move #imageContainer into the editor body */
       editorBody.appendChild(imageContainer);
 
-      /* Move side menu buttons into editor toolbar */
+      /* Move side menu buttons into the editor toolbar */
       editorToolbar.appendChild(drawButton);
       editorToolbar.appendChild(undoDrawButton);
       editorToolbar.appendChild(cropButton);
@@ -779,16 +772,15 @@
       sideMenu.style.display = 'none';
       hamburgerBtn.style.display = 'none';
 
-      adjustCanvas();
+      /* Fit the image below the toolbar so there's no scrolling or zooming */
+      fitImageToEditor();
     });
 
     editorModalClose.addEventListener('click', () => {
       editorModal.style.display = 'none';
 
-      /* Move #imageContainer back to main container */
       mainContainer.querySelector('.input-section').appendChild(imageContainer);
 
-      /* Move buttons back to side menu */
       sideMenu.appendChild(drawButton);
       sideMenu.appendChild(undoDrawButton);
       sideMenu.appendChild(cropButton);
@@ -826,8 +818,50 @@
       }
     });
 
+    /* The key function that resizes the image to fit under the toolbar in the editor */
+    function fitImageToEditor() {
+      if (!uploadedImage.naturalWidth || !uploadedImage.naturalHeight) return;
+
+      // The height of the toolbar
+      const toolbarHeight = editorToolbar.offsetHeight;
+      // The total height we have (the editorModalContent is 100% of the screen)
+      const totalEditorHeight = editorModalContent.clientHeight;
+
+      // The available height for the image area:
+      const availableHeight = totalEditorHeight - toolbarHeight;
+
+      // We measure the aspect ratio of the natural image
+      const aspectRatio = uploadedImage.naturalWidth / uploadedImage.naturalHeight;
+
+      /* We want the image to fit:
+         1) Within the editor width (100%)
+         2) And within availableHeight 
+         We'll do the math in JS
+      */
+      const editorWidth = editorModalContent.clientWidth;
+
+      // We'll pick a new width = editorWidth
+      // Then a new height = newWidth / aspectRatio
+      let newWidth = editorWidth;
+      let newHeight = newWidth / aspectRatio;
+
+      // If newHeight is bigger than availableHeight, we shrink
+      if (newHeight > availableHeight) {
+        newHeight = availableHeight;
+        newWidth = newHeight * aspectRatio;
+      }
+
+      // Apply these new dimensions to the image 
+      uploadedImage.style.width = newWidth + 'px';
+      uploadedImage.style.height = newHeight + 'px';
+
+      // Then, recalc the canvases
+      adjustCanvas();
+    }
+
     /*********************************************************
-     * Drawing / Cropping
+     * Drawing / Cropping, Mouse/Touch, OCR, etc.
+     *  (All your existing logic remains the same)
      *********************************************************/
     drawButton.addEventListener('click', () => {
       if (!imageDataURL) {
@@ -907,9 +941,6 @@
       undoDrawButton.style.display = userRectangles.length > 0 ? 'block' : 'none';
     });
 
-    /*********************************************************
-     * Mouse Events
-     *********************************************************/
     overlayCanvas.addEventListener('mousedown', (e) => {
       const rect = overlayCanvas.getBoundingClientRect();
       const x = (e.clientX - rect.left);
@@ -948,7 +979,6 @@
         currentRect = { x: startX, y: startY, width: 0, height: 0 };
       }
     });
-
     overlayCanvas.addEventListener('mousemove', (e) => {
       const rect = overlayCanvas.getBoundingClientRect();
       const x = (e.clientX - rect.left);
@@ -974,7 +1004,6 @@
         drawRectangle(currentRect, style.fill, style.stroke);
       }
     });
-
     overlayCanvas.addEventListener('mouseup', () => {
       if (isResizing) {
         isResizing = false;
@@ -1013,7 +1042,7 @@
     });
 
     /*********************************************************
-     * Touch Events for Mobile
+     * Touch Events (same logic)
      *********************************************************/
     overlayCanvas.addEventListener('touchstart', (e) => {
       if (!(isDrawingMode || isCroppingMode)) return;
@@ -1056,7 +1085,6 @@
         currentRect = { x: startX, y: startY, width: 0, height: 0 };
       }
     }, { passive: false });
-
     overlayCanvas.addEventListener('touchmove', (e) => {
       if (!(isDrawingMode || isCroppingMode)) return;
       e.preventDefault();
@@ -1079,14 +1107,13 @@
         currentRect.width = x - startX;
         currentRect.height = y - startY;
         redrawCanvas();
-        const style = isDrawingMode 
+        const style = isDrawingMode
           ? { fill: 'rgba(255, 0, 0, 0.3)', stroke: 'red' }
           : { fill: 'rgba(0, 150, 255, 0.25)', stroke: 'rgba(0, 150, 255, 1)' };
         drawRectangle(currentRect, style.fill, style.stroke);
       }
     }, { passive: false });
-
-    overlayCanvas.addEventListener('touchend', () => {
+    overlayCanvas.addEventListener('touchend', (e) => {
       if (isResizing) {
         isResizing = false;
         activeHandle = null;
@@ -1124,7 +1151,7 @@
     });
 
     /*********************************************************
-     * Move / Resize Helper Functions
+     * Move/Resize Helpers
      *********************************************************/
     function moveRectangle(x, y) {
       if (resizeTarget === 'crop') {
@@ -1140,7 +1167,6 @@
         userRectangles[resizeTarget] = normalizeRect(rect);
       }
     }
-
     function resizeRectangle(x, y) {
       if (!handlesVisible) return;
       if (resizeTarget === 'crop') {
@@ -1462,7 +1488,6 @@
     }
 
     function getHandleAt(x, y) {
-      /* Check cropRect first */
       if (cropRect) {
         const handle = getHandlePositions(cropRect);
         for (let key of HANDLE_TYPES) {
@@ -1477,7 +1502,6 @@
           }
         }
       }
-      /* Check userRectangles next */
       for (let i = 0; i < userRectangles.length; i++) {
         const rect = userRectangles[i];
         const handles = getHandlePositions(rect);
@@ -1494,6 +1518,23 @@
         }
       }
       return null;
+    }
+
+    function normalizeRect(rect) {
+      let { x, y, width, height } = rect;
+      if (width < 0) {
+        x += width;
+        width = Math.abs(width);
+      }
+      if (height < 0) {
+        y += height;
+        height = Math.abs(height);
+      }
+      x = Math.max(0, x);
+      y = Math.max(0, y);
+      width = Math.min(width, uploadedImage.clientWidth - x);
+      height = Math.min(height, uploadedImage.clientHeight - y);
+      return { x, y, width, height };
     }
 
     /* Crop Execution */
@@ -1540,9 +1581,13 @@
         applyPostprocessing();
       }
     });
-
     window.addEventListener('resize', () => {
-      adjustCanvas();
+      /* If editor is open, we re-fit the image so no scrolling or zooming is needed */
+      if (editorModal.style.display === 'block') {
+        fitImageToEditor();
+      } else {
+        adjustCanvas();
+      }
       updateHandleSize();
     });
 
@@ -1566,7 +1611,6 @@
 
       applyPostprocessing();
     }
-
     function updateHandleSize() {
       if (window.innerWidth <= 600) {
         HANDLE_SIZE = 20;
@@ -1637,14 +1681,17 @@
       imageDataURL = postprocessingCanvas.toDataURL();
       redrawCanvas();
     }
-
     function applySharpeningFilter(ctx, intensity) {
       const imageData = ctx.getImageData(0, 0, postprocessingCanvas.width, postprocessingCanvas.height);
       const data = imageData.data;
       const width = imageData.width;
       const height = imageData.height;
 
-      const kernel = [0, -1, 0, -1, 5, -1, 0, -1, 0];
+      const kernel = [
+        0, -1, 0,
+        -1, 5, -1,
+        0, -1, 0
+      ];
       const side = Math.round(Math.sqrt(kernel.length));
       const halfSide = Math.floor(side / 2);
       const src = data;
