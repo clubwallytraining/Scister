@@ -19,13 +19,11 @@
             flex-direction: column;
             height: 100vh;
         }
-
         h1 {
             font-size: 24px;
             margin-bottom: 10px;
             text-align: center;
         }
-
         p {
             margin-bottom: 10px;
             text-align: center;
@@ -65,8 +63,6 @@
         #sideMenu.active {
             left: 0;
         }
-
-        /* Buttons in the Side Menu */
         #sideMenu button {
             padding: 12px 20px;
             width: 80%;
@@ -90,7 +86,6 @@
             background-color: #1C86EE;
             transform: translateX(5px);
         }
-
         #undo-draw-button {
             background-color: #c47f00; 
         }
@@ -98,7 +93,6 @@
             background-color: #FF8C00;
             transform: translateX(5px);
         }
-
         #crop-button {
             background-color: #009d00; 
         }
@@ -106,7 +100,6 @@
             background-color: #2E8B57;
             transform: translateX(5px);
         }
-
         #confirm-crop-button {
             background-color: #00e200; 
         }
@@ -114,7 +107,6 @@
             background-color: #2E8B57;
             transform: translateX(5px);
         }
-
         #perform-ocr-button {
             background-color: #9c009c; 
         }
@@ -122,7 +114,6 @@
             background-color: #6A0DAD;
             transform: translateX(5px);
         }
-
         #clear-image-button {
             background-color: #e43d00; 
         }
@@ -130,7 +121,6 @@
             background-color: #E03E00;
             transform: translateX(5px);
         }
-
         #update-table-button {
             background-color: #00958d;
         }
@@ -138,7 +128,6 @@
             background-color: #1E9C9C;
             transform: translateX(5px);
         }
-
         #save-csv-button {
             background-color: #a2a200; 
             color: #000; 
@@ -147,7 +136,6 @@
             background-color: #FFC107;
             transform: translateX(5px);
         }
-
         #postprocessing-button {
             background-color: #009da0; 
         }
@@ -231,12 +219,13 @@
             display: none;
             max-width: 100%;
             margin: 0 auto;
+            /* This ensures we can further limit size within the modal if needed */
         }
         #uploadedImage {
+            display: block;
             max-width: 100%;
             border: 2px solid #333;
             border-radius: 8px;
-            display: block;
         }
 
         /* Canvas */
@@ -427,7 +416,7 @@
             background-color: #1C86EE;
         }
 
-        /* Editor Modal (where the image + toolbar go) */
+        /* Editor Modal */
         #editorModal {
             display: none;
             position: fixed;
@@ -451,6 +440,9 @@
             position: relative;
             display: flex;
             flex-direction: column;
+            /* Let the content scroll if it grows too tall */
+            max-height: 90vh;
+            overflow: hidden;
         }
         #editorModalClose {
             color: #aaa;
@@ -468,23 +460,39 @@
             text-decoration: none;
         }
 
-        /* Editor Toolbar inside the modal */
+        /* Editor Toolbar: horizontal scroll */
         #editorToolbar {
             display: flex;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;   /* single row, horizontal scroll if needed */
             gap: 8px;
             padding-bottom: 10px;
             border-bottom: 1px solid #333;
             margin-bottom: 10px;
+            overflow-x: auto;    /* enable horizontal scrolling */
+            overflow-y: hidden;
+        }
+        /* Optional scrollbar styling for the toolbar */
+        #editorToolbar::-webkit-scrollbar {
+            height: 6px;
+        }
+        #editorToolbar::-webkit-scrollbar-thumb {
+            background-color: #444;
+            border-radius: 3px;
         }
 
-        /* Editor Body (where we place the #imageContainer) */
+        /* Editor Body (where #imageContainer is placed) */
         #editorBody {
             flex: 1;
             position: relative;
             display: flex;
             justify-content: center;
             align-items: center;
+            overflow: auto; /* If the image/canvas is large, allow vertical scroll */
+        }
+        /* Scale the #imageContainer or the image to fit within the modal */
+        #editorBody #imageContainer {
+            max-width: 100%;
+            max-height: 80vh; /* Keep some space for the toolbar */
         }
 
         /* Responsive Adjustments */
@@ -521,6 +529,10 @@
             #dataTable td {
                 font-size: 13px;
                 padding: 10px 12px;
+            }
+            #editorModalContent {
+                margin: 5% auto;
+                width: 95%;
             }
         }
     </style>
@@ -590,12 +602,12 @@
             <span id="editorModalClose">&times;</span>
             <div id="editorToolbar"></div>
             <div id="editorBody">
-                <!-- We will move #imageContainer here on open -->
+                <!-- We'll dynamically move #imageContainer here upon "Open in Editor" -->
             </div>
         </div>
     </div>
 
-    <!-- Main Container for everything outside the editor -->
+    <!-- Main Container -->
     <div class="container" id="mainContainer">
         <h1>OCR Image Processor</h1>
         <br><br>
@@ -648,7 +660,7 @@
     </table>
 
     <script>
-        // Grab references to DOM elements
+        // DOM elements
         const imageInput = document.getElementById('imageInput');
         const uploadedImage = document.getElementById('uploadedImage');
         const imageContainer = document.getElementById('imageContainer');
@@ -670,7 +682,7 @@
         const postprocessingControls = document.getElementById('postprocessing-controls');
         const infoButton = document.getElementById('info-button');
 
-        // Postprocessing Inputs
+        // Postprocessing inputs
         const grayscaleCheckbox = document.getElementById('grayscale');
         const highlightSlider = document.getElementById('highlight');
         const claritySlider = document.getElementById('clarity');
@@ -726,7 +738,7 @@
         let handlesVisible = true;
         let initialRect = null;
 
-        /* ----------------- Hamburger / Side Menu Toggle ----------------- */
+        /* ========== Hamburger / Side Menu Toggle ========== */
         function toggleSideMenu() {
             sideMenu.classList.toggle('active');
         }
@@ -737,7 +749,6 @@
                 sideMenu.classList.remove('active');
             }
         });
-
         window.addEventListener('click', (e) => {
             if (!sideMenu.contains(e.target) && e.target !== hamburgerBtn) {
                 if (sideMenu.classList.contains('active')) {
@@ -746,22 +757,20 @@
             }
         });
 
-        /* ----------------- Info Modal Logic ----------------- */
+        /* ========== Info Modal Logic ========== */
         infoButton.addEventListener('click', () => {
             infoModal.style.display = 'block';
         });
-
         infoModalClose.addEventListener('click', () => {
             infoModal.style.display = 'none';
         });
-
         window.addEventListener('click', (event) => {
             if (event.target === infoModal) {
                 infoModal.style.display = 'none';
             }
         });
 
-        /* ----------------- Postprocessing Toggle ----------------- */
+        /* ========== Postprocessing Toggle ========== */
         postprocessingButton.addEventListener('click', () => {
             if (postprocessingControls.style.display === 'flex') {
                 postprocessingControls.style.display = 'none';
@@ -770,7 +779,7 @@
             }
         });
 
-        /* ----------------- Image Upload ----------------- */
+        /* ========== Image Upload ========== */
         imageInput.addEventListener('change', () => {
             const file = imageInput.files[0];
             if (!file) {
@@ -803,16 +812,14 @@
             reader.readAsDataURL(file);
         });
 
-        /* ----------------- Editor Modal Logic ----------------- */
+        /* ========== Editor Modal Logic ========== */
         openEditorButton.addEventListener('click', () => {
-            // Show the editor modal
             editorModal.style.display = 'block';
 
-            // Move the imageContainer into the editorBody
-            // This ensures the user sees the same image/canvases inside the modal
+            // Move #imageContainer into the editor
             editorBody.appendChild(imageContainer);
 
-            // Move side menu buttons into the editor toolbar
+            // Move side menu buttons into editorToolbar
             editorToolbar.appendChild(drawButton);
             editorToolbar.appendChild(undoDrawButton);
             editorToolbar.appendChild(cropButton);
@@ -824,19 +831,18 @@
             editorToolbar.appendChild(postprocessingButton);
             editorToolbar.appendChild(infoButton);
 
-            // Hide side menu and hamburger (so user only sees the modal)
+            // Hide side menu/hamburger
             sideMenu.style.display = 'none';
             hamburgerBtn.style.display = 'none';
         });
 
-        // Close editor modal
         editorModalClose.addEventListener('click', () => {
             editorModal.style.display = 'none';
 
-            // Move the imageContainer back to main container
+            // Move #imageContainer back to main container
             mainContainer.querySelector('.input-section').appendChild(imageContainer);
 
-            // Move the buttons back into the sideMenu
+            // Move buttons back to the side menu
             sideMenu.appendChild(drawButton);
             sideMenu.appendChild(undoDrawButton);
             sideMenu.appendChild(cropButton);
@@ -848,20 +854,18 @@
             sideMenu.appendChild(postprocessingButton);
             sideMenu.appendChild(infoButton);
 
-            // Show side menu/hamburger again
             sideMenu.style.display = 'flex';
             hamburgerBtn.style.display = 'block';
         });
 
-        // Close Editor Modal if user clicks outside
         window.addEventListener('click', (event) => {
             if (event.target === editorModal) {
                 editorModal.style.display = 'none';
 
-                // Move the imageContainer back to main container
+                // Move the imageContainer back
                 mainContainer.querySelector('.input-section').appendChild(imageContainer);
 
-                // Move buttons back to sideMenu
+                // Move buttons back
                 sideMenu.appendChild(drawButton);
                 sideMenu.appendChild(undoDrawButton);
                 sideMenu.appendChild(cropButton);
@@ -878,7 +882,7 @@
             }
         });
 
-        /* ----------------- Drawing / Cropping ----------------- */
+        /* ========== Drawing / Cropping ========== */
         drawButton.addEventListener('click', () => {
             if (!imageDataURL) {
                 alert('Please upload an image first.');
@@ -957,7 +961,7 @@
             undoDrawButton.style.display = userRectangles.length > 0 ? 'block' : 'none';
         });
 
-        /* ----------------- Mouse Events for Drawing / Resizing ----------------- */
+        /* ========== Mouse Events for Drawing / Resizing ========== */
         overlayCanvas.addEventListener('mousedown', (e) => {
             const rect = overlayCanvas.getBoundingClientRect();
             const x = (e.clientX - rect.left);
@@ -965,7 +969,6 @@
 
             const handleInfo = getHandleAt(x, y);
             if (handleInfo) {
-                // user clicked on a resize/move handle
                 if (handleInfo.type === 'sw') {
                     isResizing = true;
                     activeHandle = handleInfo.type;
@@ -1061,7 +1064,7 @@
             }
         });
 
-        /* ----------------- Touch Events for Mobile ----------------- */
+        /* ========== Touch Events for Mobile ========== */
         overlayCanvas.addEventListener('touchstart', (e) => {
             if (!(isDrawingMode || isCroppingMode)) return;
             e.preventDefault();
@@ -1170,7 +1173,7 @@
             }
         });
 
-        /* ----------------- Move/Resize Helper Functions ----------------- */
+        /* ========== Move / Resize Helper Functions ========== */
         function moveRectangle(x, y) {
             if (resizeTarget === 'crop') {
                 if (!cropRect) return;
@@ -1222,7 +1225,7 @@
             }
         }
 
-        /* ----------------- OCR ----------------- */
+        /* ========== Perform OCR ========== */
         performOcrButton.addEventListener('click', async () => {
             if (!imageDataURL) {
                 alert('Please select an image first.');
@@ -1269,10 +1272,7 @@
             ctx.drawImage(uploadedImage, cropX, cropY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
 
             const croppedDataURL = canvas.toDataURL();
-
-            const worker = await Tesseract.createWorker({
-                logger: m => console.log(m)
-            });
+            const worker = await Tesseract.createWorker({ logger: m => console.log(m) });
             await worker.loadLanguage('eng');
             await worker.initialize('eng');
             const { data } = await worker.recognize(croppedDataURL);
@@ -1281,7 +1281,7 @@
             return data.text.trim();
         }
 
-        /* ----------------- Assign Text to Fields ----------------- */
+        /* ========== Assign Text to Fields ========== */
         overlayCanvas.addEventListener('click', (e) => {
             if (userRectangles.length === 0) return;
             const rect = overlayCanvas.getBoundingClientRect();
@@ -1319,7 +1319,6 @@
                 alert('Invalid choice.');
                 return;
             }
-
             let targetField;
             switch (num) {
                 case 1: targetField = field1; break;
@@ -1332,7 +1331,7 @@
             targetField.value = text;
         }
 
-        /* ----------------- Clear, Update, Save CSV ----------------- */
+        /* ========== Clear, Update, Save CSV ========== */
         clearImageButton.addEventListener('click', () => {
             resetImageDisplay();
             resetFields();
@@ -1390,7 +1389,7 @@
             URL.revokeObjectURL(url);
         });
 
-        /* ----------------- Utility Functions ----------------- */
+        /* ========== Utility Functions ========== */
         function resetImageDisplay() {
             uploadedImage.src = '';
             imageContainer.style.display = 'none';
@@ -1416,7 +1415,7 @@
             // If editor modal is open, close it
             editorModal.style.display = 'none';
 
-            // Move the imageContainer back to the main container if it's in the modal
+            // Move #imageContainer back to main container if in the modal
             if (editorBody.contains(imageContainer)) {
                 mainContainer.querySelector('.input-section').appendChild(imageContainer);
             }
@@ -1595,19 +1594,17 @@
             };
         }
 
-        /* ----------------- Canvas Adjustments ----------------- */
+        /* ========== Canvas Adjustments ========== */
         window.addEventListener('load', () => {
             updateHandleSize();
             if (uploadedImage.complete && uploadedImage.naturalWidth !== 0) {
                 applyPostprocessing();
             }
         });
-
         window.addEventListener('resize', () => {
             adjustCanvas();
             updateHandleSize();
         });
-
         function adjustCanvas() {
             const ratio = window.devicePixelRatio || 1;
 
@@ -1627,7 +1624,6 @@
 
             applyPostprocessing();
         }
-
         function updateHandleSize() {
             if (window.innerWidth <= 600) {
                 HANDLE_SIZE = 20;
@@ -1637,7 +1633,7 @@
             redrawCanvas();
         }
 
-        /* ----------------- Postprocessing ----------------- */
+        /* ========== Postprocessing ========== */
         function applyPostprocessing() {
             if (!uploadedImage.src) return;
             const ppCtx = postprocessingCanvas.getContext('2d');
@@ -1678,7 +1674,6 @@
             if (highlightValue !== 0) {
                 const factor = highlightValue * 0.5;
                 for (let i = 0; i < data.length; i += 4) {
-                    // Increase bright areas
                     if (data[i] > 50 || data[i + 1] > 50 || data[i + 2] > 50) {
                         data[i] += factor;
                         data[i + 1] += factor;
@@ -1715,8 +1710,6 @@
             const src = data;
             const sw = width;
             const sh = height;
-            const w = sw;
-            const h = sh;
             const output = new Uint8ClampedArray(src.length);
 
             for (let y = 0; y < h; y++) {
