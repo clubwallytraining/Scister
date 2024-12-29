@@ -19,11 +19,13 @@
             flex-direction: column;
             height: 100vh;
         }
+
         h1 {
             font-size: 24px;
             margin-bottom: 10px;
             text-align: center;
         }
+
         p {
             margin-bottom: 10px;
             text-align: center;
@@ -219,13 +221,12 @@
             display: none;
             max-width: 100%;
             margin: 0 auto;
-            /* This ensures we can further limit size within the modal if needed */
         }
         #uploadedImage {
             display: block;
-            max-width: 100%;
             border: 2px solid #333;
             border-radius: 8px;
+            /* We'll dynamically override width/height in JS with fitImageToEditor() */
         }
 
         /* Canvas */
@@ -440,8 +441,7 @@
             position: relative;
             display: flex;
             flex-direction: column;
-            /* Let the content scroll if it grows too tall */
-            max-height: 90vh;
+            max-height: 90vh; /* keep it within screen */
             overflow: hidden;
         }
         #editorModalClose {
@@ -463,12 +463,12 @@
         /* Editor Toolbar: horizontal scroll */
         #editorToolbar {
             display: flex;
-            flex-wrap: nowrap;   /* single row, horizontal scroll if needed */
+            flex-wrap: nowrap;
             gap: 8px;
             padding-bottom: 10px;
             border-bottom: 1px solid #333;
             margin-bottom: 10px;
-            overflow-x: auto;    /* enable horizontal scrolling */
+            overflow-x: auto;
             overflow-y: hidden;
         }
         /* Optional scrollbar styling for the toolbar */
@@ -487,54 +487,9 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            overflow: auto; /* If the image/canvas is large, allow vertical scroll */
+            overflow: auto;
         }
-        /* Scale the #imageContainer or the image to fit within the modal */
-        #editorBody #imageContainer {
-            max-width: 100%;
-            max-height: 80vh; /* Keep some space for the toolbar */
-        }
-
-        /* Responsive Adjustments */
-        @media (max-width: 600px) {
-            #sideMenu {
-                width: 200px;
-            }
-            #hamburgerBtn {
-                width: 40px;
-                height: 40px;
-                top: 15px;
-                left: 15px;
-            }
-            #sideMenu button {
-                font-size: 14px;
-                padding: 10px 15px;
-            }
-            h1 {
-                font-size: 22px;
-            }
-            p {
-                font-size: 13px;
-            }
-            #fieldContainer label,
-            .postprocessing-controls label {
-                font-size: 14px;
-            }
-            #fieldContainer input[type="text"],
-            .postprocessing-controls input[type="range"],
-            .postprocessing-controls input[type="checkbox"] {
-                font-size: 13px;
-            }
-            #dataTable th,
-            #dataTable td {
-                font-size: 13px;
-                padding: 10px 12px;
-            }
-            #editorModalContent {
-                margin: 5% auto;
-                width: 95%;
-            }
-        }
+        /* We won't fix a max-width/height in CSS anymore; we’ll do it dynamically in JS. */
     </style>
 </head>
 <body>
@@ -834,6 +789,9 @@
             // Hide side menu/hamburger
             sideMenu.style.display = 'none';
             hamburgerBtn.style.display = 'none';
+
+            // **Fit the image to the editor**:
+            fitImageToEditor();
         });
 
         editorModalClose.addEventListener('click', () => {
@@ -862,10 +820,7 @@
             if (event.target === editorModal) {
                 editorModal.style.display = 'none';
 
-                // Move the imageContainer back
                 mainContainer.querySelector('.input-section').appendChild(imageContainer);
-
-                // Move buttons back
                 sideMenu.appendChild(drawButton);
                 sideMenu.appendChild(undoDrawButton);
                 sideMenu.appendChild(cropButton);
@@ -881,6 +836,37 @@
                 hamburgerBtn.style.display = 'block';
             }
         });
+
+        /* ========== Dynamically Resize Image for Editor ========== */
+        function fitImageToEditor() {
+            if (!uploadedImage.naturalWidth || !uploadedImage.naturalHeight) return;
+
+            // We get the editor's size
+            const editorModalContent = document.getElementById('editorModalContent');
+            const editorToolbarHeight = editorToolbar.offsetHeight;
+            // The approximate available height for the image
+            const availableHeight = editorModalContent.clientHeight - editorToolbarHeight - 20 /*some buffer*/;
+            const availableWidth = editorModalContent.clientWidth - 20 /*some buffer*/;
+
+            // Original aspect ratio
+            const aspectRatio = uploadedImage.naturalWidth / uploadedImage.naturalHeight;
+
+            let newWidth = availableWidth;
+            let newHeight = newWidth / aspectRatio;
+
+            // If that newHeight is too big, reduce it
+            if (newHeight > availableHeight) {
+                newHeight = availableHeight;
+                newWidth = newHeight * aspectRatio;
+            }
+
+            // Apply the new dimensions to the image
+            uploadedImage.style.width = newWidth + 'px';
+            uploadedImage.style.height = newHeight + 'px';
+
+            // Re-run adjustCanvas to scale the canvases accordingly
+            adjustCanvas();
+        }
 
         /* ========== Drawing / Cropping ========== */
         drawButton.addEventListener('click', () => {
@@ -1496,7 +1482,7 @@
             };
         }
 
-        function drawHandles(rect, whichRect) {
+        function drawHandles(rect) {
             const ctx = overlayCanvas.getContext('2d');
             const handles = getHandlePositions(rect);
             ctx.fillStyle = '#e0e0e0';
@@ -1602,9 +1588,15 @@
             }
         });
         window.addEventListener('resize', () => {
-            adjustCanvas();
+            // If the editor is open, re-fit the image
+            if (editorModal.style.display === 'block') {
+                fitImageToEditor();
+            } else {
+                adjustCanvas();
+            }
             updateHandleSize();
         });
+
         function adjustCanvas() {
             const ratio = window.devicePixelRatio || 1;
 
@@ -1710,6 +1702,8 @@
             const src = data;
             const sw = width;
             const sh = height;
+            const w = sw;
+            const h = sh;
             const output = new Uint8ClampedArray(src.length);
 
             for (let y = 0; y < h; y++) {
