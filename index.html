@@ -2,12 +2,14 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>OCR Image Processor - Mobile Only (Single Anchor, Unified Sizing)</title>
+  <title>OCR Image Processor - Mobile Only (Unified Small Image + Single Anchor)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+
   <!-- Tesseract.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
+
   <style>
-    /* Root & Body: No horizontal scroll, mobile-friendly. */
+    /* Body & Root: no horizontal scroll, vertical allowed, mobile-friendly */
     html, body {
       margin: 0;
       padding: 0;
@@ -20,7 +22,7 @@
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
 
-    /* Centered Container (mobile fluid) */
+    /* Main container */
     .container {
       display: flex;
       flex-direction: column;
@@ -35,6 +37,7 @@
       margin-bottom: 10px;
       text-align: center;
     }
+
     p {
       margin-bottom: 10px;
       text-align: center;
@@ -44,7 +47,7 @@
       margin-right: auto;
     }
 
-    /* Side Menu (Hamburger) */
+    /* Side Menu */
     #sideMenu {
       position: fixed;
       top: 0;
@@ -79,50 +82,66 @@
     }
 
     /* Button Colors */
-    #draw-button { background-color: #005cb8; }
+    #draw-button {
+      background-color: #005cb8; 
+    }
     #draw-button:hover {
       background-color: #1C86EE;
       transform: translateX(5px);
     }
-    #undo-draw-button { background-color: #c47f00; }
+    #undo-draw-button {
+      background-color: #c47f00; 
+    }
     #undo-draw-button:hover {
       background-color: #FF8C00;
       transform: translateX(5px);
     }
-    #crop-button { background-color: #009d00; }
+    #crop-button {
+      background-color: #009d00; 
+    }
     #crop-button:hover {
       background-color: #2E8B57;
       transform: translateX(5px);
     }
-    #confirm-crop-button { background-color: #00e200; }
+    #confirm-crop-button {
+      background-color: #00e200; 
+    }
     #confirm-crop-button:hover {
       background-color: #2E8B57;
       transform: translateX(5px);
     }
-    #perform-ocr-button { background-color: #9c009c; }
+    #perform-ocr-button {
+      background-color: #9c009c; 
+    }
     #perform-ocr-button:hover {
       background-color: #6A0DAD;
       transform: translateX(5px);
     }
-    #clear-image-button { background-color: #e43d00; }
+    #clear-image-button {
+      background-color: #e43d00; 
+    }
     #clear-image-button:hover {
       background-color: #E03E00;
       transform: translateX(5px);
     }
-    #update-table-button { background-color: #00958d; }
+    #update-table-button {
+      background-color: #00958d;
+    }
     #update-table-button:hover {
       background-color: #1E9C9C;
       transform: translateX(5px);
     }
     #save-csv-button {
-      background-color: #a2a200;
+      background-color: #a2a200; 
       color: #000;
     }
     #save-csv-button:hover {
       background-color: #FFC107;
       transform: translateX(5px);
     }
-    #postprocessing-button { background-color: #009da0; }
+    #postprocessing-button {
+      background-color: #009da0;
+    }
     #postprocessing-button:hover {
       background-color: #00B3A1;
       transform: translateX(5px);
@@ -201,13 +220,13 @@
       position: relative;
       display: none;
       width: 100%;
-      max-width: 100%;
       margin: 0 auto;
+      /* We unify smaller size by limiting to 600px or any logic you prefer. */
+      max-width: 600px;
     }
-    /* We'll scale the image initially so it's the same as in the editor. */
     #uploadedImage {
       display: block;
-      width: 100%;
+      width: 100%; 
       height: auto;
       border: 2px solid #333;
       border-radius: 8px;
@@ -366,7 +385,7 @@
       background-color: #1C86EE;
     }
 
-    /* Editor Modal: Fullscreen for Mobile */
+    /* Editor Modal */
     #editorModal {
       display: none;
       position: fixed;
@@ -375,7 +394,7 @@
       top: 0;
       width: 100%;
       height: 100%;
-      overflow: hidden;
+      overflow: hidden; 
       background-color: rgba(0, 0, 0, 0.7);
     }
     #editorModalContent {
@@ -403,7 +422,7 @@
       text-decoration: none;
     }
 
-    /* Editor Toolbar horizontally scrollable */
+    /* Editor Toolbar */
     #editorToolbar {
       display: flex;
       flex-wrap: nowrap;
@@ -434,8 +453,8 @@
     }
   </style>
 </head>
-<body>
 
+<body>
   <!-- Hamburger Menu -->
   <button id="hamburgerBtn" aria-label="Toggle Side Menu">
     <span class="bar"></span>
@@ -454,7 +473,7 @@
     <button id="update-table-button" class="side-menu-button">Update Table</button>
     <button id="save-csv-button" class="side-menu-button">Save CSV</button>
 
-    <!-- Postprocessing Submenu -->
+    <!-- Postprocessing -->
     <button id="postprocessing-button" class="side-menu-button">Postprocessing</button>
     <div class="postprocessing-controls" id="postprocessing-controls">
       <label for="grayscale">Grayscale:</label>
@@ -554,7 +573,9 @@
   </table>
 
   <script>
-    /* DOM Elements */
+    /***************************************************************
+     * DOM Elements
+     ***************************************************************/
     const hamburgerBtn = document.getElementById('hamburgerBtn');
     const sideMenu = document.getElementById('sideMenu');
 
@@ -601,7 +622,9 @@
     const field5 = document.getElementById('field5');
     const field6 = document.getElementById('field6');
 
-    /* State */
+    /***************************************************************
+     * State Variables
+     ***************************************************************/
     let userRectangles = [];
     let rectangleTexts = {};
     let imageDataURL = null;
@@ -616,15 +639,16 @@
     let startY = 0;
     let currentRect = null;
     let moveOffset = { x: 0, y: 0 };
-    let HANDLE_SIZE = 10;
-    const HANDLE_TYPES = ['sw']; 
-    /* KEY CHANGE: We only have one anchor: 'sw' 
-       that we allow to move/resize in all 8 directions. */
+    let HANDLE_SIZE = 20; /* For mobile default. We'll do an update on load. */
+    /* Single anchor approach => 'sw' only */
+    const HANDLE_TYPES = ['sw'];
     let resizeTarget = null;
     let handlesVisible = true;
     let initialRect = null;
 
-    /* Toggle Side Menu */
+    /***************************************************************
+     * Hamburger / Side Menu
+     ***************************************************************/
     function toggleSideMenu() {
       sideMenu.classList.toggle('active');
     }
@@ -635,7 +659,6 @@
         sideMenu.classList.remove('active');
       }
     });
-
     window.addEventListener('click', (e) => {
       if (!sideMenu.contains(e.target) && e.target !== hamburgerBtn) {
         if (sideMenu.classList.contains('active')) {
@@ -644,7 +667,9 @@
       }
     });
 
-    /* Info Modal */
+    /***************************************************************
+     * Info Modal
+     ***************************************************************/
     infoButton.addEventListener('click', () => {
       infoModal.style.display = 'block';
     });
@@ -657,15 +682,20 @@
       }
     });
 
-    /* Postprocessing Toggle */
+    /***************************************************************
+     * Postprocessing Toggle
+     ***************************************************************/
     postprocessingButton.addEventListener('click', () => {
-      postprocessingControls.style.display =
-        postprocessingControls.style.display === 'flex' ? 'none' : 'flex';
+      if (postprocessingControls.style.display === 'flex') {
+        postprocessingControls.style.display = 'none';
+      } else {
+        postprocessingControls.style.display = 'flex';
+      }
     });
 
-    /* Image Upload => We unify the “small” size logic. 
-       This function will scale down the image as soon as it’s loaded,
-       exactly as in the editor. */
+    /***************************************************************
+     * Image Upload => unify “smaller” scaling
+     ***************************************************************/
     imageInput.addEventListener('change', () => {
       const file = imageInput.files[0];
       if (!file) {
@@ -676,12 +706,10 @@
       reader.onload = function(e) {
         uploadedImage.src = e.target.result;
         uploadedImage.onload = () => {
-          // Show container
+          /* Show container, scale image to smaller size if needed. */
           imageContainer.style.display = 'block';
-
-          // Immediately run "fitToSmallSize" so the image is smaller
-          fitToSmallSize();
-
+          scaleImageIfNeeded(); /* => keep it at max 600 wide, for example */
+          
           clearCanvas();
           statusMessage.textContent = 'Image loaded. You can crop or draw on the image.';
           imageDataURL = e.target.result;
@@ -700,14 +728,31 @@
       reader.readAsDataURL(file);
     });
 
-    /* When opening the editor => also resize to fit. 
-       But it’s already “small.” 
-       We'll do it anyway just to ensure no overflow. */
+    /* The function that ensures we never exceed 600px wide, for instance. */
+    function scaleImageIfNeeded() {
+      const maxWidth = 600;
+      if (uploadedImage.naturalWidth > maxWidth) {
+        const aspect = uploadedImage.naturalWidth / uploadedImage.naturalHeight;
+        const newWidth = maxWidth;
+        const newHeight = newWidth / aspect;
+        uploadedImage.style.width = newWidth + 'px';
+        uploadedImage.style.height = newHeight + 'px';
+      } else {
+        /* If smaller already, use actual. */
+        uploadedImage.style.width = uploadedImage.naturalWidth + 'px';
+        uploadedImage.style.height = uploadedImage.naturalHeight + 'px';
+      }
+      adjustCanvas();
+    }
+
+    /* Editor Modal => keep the smaller size. */
     openEditorButton.addEventListener('click', () => {
       editorModal.style.display = 'block';
 
+      /* Move image + canvases to editor body */
       editorBody.appendChild(imageContainer);
 
+      /* Move side menu buttons to toolbar */
       editorToolbar.appendChild(drawButton);
       editorToolbar.appendChild(undoDrawButton);
       editorToolbar.appendChild(cropButton);
@@ -725,7 +770,7 @@
       adjustCanvas();
     });
 
-    /* When closing the editor => Keep the smaller size. */
+    /* Close Editor => keep the small size */
     editorModalClose.addEventListener('click', () => {
       editorModal.style.display = 'none';
 
@@ -744,10 +789,8 @@
 
       sideMenu.style.display = 'flex';
       hamburgerBtn.style.display = 'block';
-
-      /* The image is already small, so do nothing else. */
+      /* Keep the smaller scaling. */
     });
-
     window.addEventListener('click', (event) => {
       if (event.target === editorModal) {
         editorModal.style.display = 'none';
@@ -770,54 +813,7 @@
       }
     });
 
-    /* 
-      KEY FUNCTION: fitToSmallSize() 
-      Resizes #uploadedImage so it is scaled down 
-      (like in the editor). 
-    */
-    function fitToSmallSize() {
-      // We'll pick a ratio to shrink it. 
-      // You might do some fancy logic. Let's do 50% if bigger than 600 wide, for example:
-      const MAX_WIDTH = 600; // You can pick your desired "small" width
-      if (uploadedImage.naturalWidth > MAX_WIDTH) {
-        const aspect = uploadedImage.naturalWidth / uploadedImage.naturalHeight;
-        const newWidth = MAX_WIDTH;
-        const newHeight = newWidth / aspect;
-        // Set the style:
-        uploadedImage.style.width = newWidth + 'px';
-        uploadedImage.style.height = newHeight + 'px';
-      } else {
-        /* If the image is already smaller than 600 wide, just use actual size. */
-        uploadedImage.style.width = uploadedImage.naturalWidth + 'px';
-        uploadedImage.style.height = uploadedImage.naturalHeight + 'px';
-      }
-
-      adjustCanvas();
-    }
-
-    editorModalClose.addEventListener('click', () => {
-      editorModal.style.display = 'none';
-
-      mainContainer.querySelector('.input-section').appendChild(imageContainer);
-
-      sideMenu.appendChild(drawButton);
-      sideMenu.appendChild(undoDrawButton);
-      sideMenu.appendChild(cropButton);
-      sideMenu.appendChild(confirmCropButton);
-      sideMenu.appendChild(performOcrButton);
-      sideMenu.appendChild(clearImageButton);
-      sideMenu.appendChild(updateTableButton);
-      sideMenu.appendChild(saveCsvButton);
-      sideMenu.appendChild(postprocessingButton);
-      sideMenu.appendChild(infoButton);
-
-      sideMenu.style.display = 'flex';
-      hamburgerBtn.style.display = 'block';
-
-      // The "small" size remains intact now.
-    });
-
-    /* Drawing / Cropping / Resizing Logic (Single Anchor => All 8 directions) */
+    /* Drawing / Cropping */
     drawButton.addEventListener('click', () => {
       if (!imageDataURL) {
         alert('Please upload an image first.');
@@ -896,7 +892,7 @@
       undoDrawButton.style.display = userRectangles.length > 0 ? 'block' : 'none';
     });
 
-    /* Mouse Resizing / Single Anchor => we allow 8 directions via negative widths/heights. */
+    /* Single Anchor => 'sw' => Resizing in all directions via negative widths/heights */
     overlayCanvas.addEventListener('mousedown', (e) => {
       const rect = overlayCanvas.getBoundingClientRect();
       const x = (e.clientX - rect.left);
@@ -904,10 +900,9 @@
 
       const handleInfo = getHandleAt(x, y);
       if (handleInfo) {
-        // single anchor = 'sw'
         isResizing = true;
         activeHandle = handleInfo.type; // 'sw'
-        resizeTarget = handleInfo.rect === 'crop' ? 'crop' : handleInfo.index;
+        resizeTarget = (handleInfo.rect === 'crop') ? 'crop' : handleInfo.index;
         if (resizeTarget === 'crop') {
           initialRect = { ...cropRect };
         } else {
@@ -945,7 +940,7 @@
       }
     });
 
-    overlayCanvas.addEventListener('mouseup', (e) => {
+    overlayCanvas.addEventListener('mouseup', () => {
       if (isResizing) {
         isResizing = false;
         activeHandle = null;
@@ -976,19 +971,10 @@
       }
     });
 
-    /* Single-Anchor "sw" => support 8 directions by allowing negative widths/heights. */
     function resizeRectangleSingleAnchor(mouseX, mouseY) {
       if (!handlesVisible) return;
-      /* If we are resizing the cropRect or a userRect
-         we allow dragging "sw" handle in any direction. 
-         Means x,y can become bigger or smaller => negative w/h => we rely on normalizeRect. */
       if (resizeTarget === 'crop') {
         if (!cropRect || !initialRect) return;
-        /* We interpret the "sw" handle as the pivot for all corners, meaning:
-           new x = mouseX, new y = mouseY
-           width = oldX + oldWidth - newX
-           height= oldY + oldHeight - newY
-        */
         const newX = mouseX;
         const newY = mouseY;
         const newWidth = initialRect.width + (initialRect.x - newX);
@@ -997,7 +983,6 @@
         cropRect.y = newY;
         cropRect.width = newWidth;
         cropRect.height = newHeight;
-
         cropRect = normalizeRect(cropRect);
       } else if (typeof resizeTarget === 'number') {
         const rect = userRectangles[resizeTarget];
@@ -1010,14 +995,11 @@
         rect.y = newY;
         rect.width = newWidth;
         rect.height = newHeight;
-
         userRectangles[resizeTarget] = normalizeRect(rect);
       }
     }
 
-    /* Touch logic is similar; we’d also call resizeRectangleSingleAnchor in touchmove. */
-
-    /* OCR Logic, unchanged */
+    /* OCR Logic */
     performOcrButton.addEventListener('click', async () => {
       if (!imageDataURL) {
         alert('Please select an image first.');
@@ -1120,6 +1102,7 @@
       targetField.value = text;
     }
 
+    /* Clear, Update Table, Save CSV */
     clearImageButton.addEventListener('click', () => {
       resetImageDisplay();
       resetFields();
@@ -1177,6 +1160,7 @@
       URL.revokeObjectURL(url);
     });
 
+    /* Utility */
     function resetImageDisplay() {
       uploadedImage.src = '';
       imageContainer.style.display = 'none';
@@ -1236,7 +1220,7 @@
     function redrawCanvas() {
       clearCanvas();
       userRectangles.forEach((rect, index) => {
-        const fillStyle = rectangleTexts[index] 
+        const fillStyle = rectangleTexts[index]
           ? 'rgba(0, 150, 255, 0.3)'
           : 'rgba(255, 0, 0, 0.3)';
         const strokeStyle = rectangleTexts[index] ? 'blue' : 'red';
@@ -1270,54 +1254,50 @@
       ctx.strokeRect(rect.x, rect.y, rect.width, rect.height);
     }
 
-    /* Only one anchor is 'sw', so we skip "ne" logic. */
     function getHandlePositions(rect) {
+      /* Single anchor => 'sw' */
       return {
-        sw: { x: rect.x, y: rect.y + rect.height },
+        sw: { x: rect.x, y: rect.y + rect.height }
       };
     }
+
     function drawHandles(rect) {
       const ctx = overlayCanvas.getContext('2d');
       const handles = getHandlePositions(rect);
       ctx.fillStyle = '#e0e0e0';
       ctx.strokeStyle = '#000';
-      ['sw'].forEach(key => {
-        const handle = handles[key];
-        ctx.fillRect(handle.x - HANDLE_SIZE / 2, handle.y - HANDLE_SIZE / 2, HANDLE_SIZE, HANDLE_SIZE);
-        ctx.strokeRect(handle.x - HANDLE_SIZE / 2, handle.y - HANDLE_SIZE / 2, HANDLE_SIZE, HANDLE_SIZE);
-      });
+      /* Only 'sw' handle */
+      const handle = handles.sw;
+      ctx.fillRect(handle.x - HANDLE_SIZE / 2, handle.y - HANDLE_SIZE / 2, HANDLE_SIZE, HANDLE_SIZE);
+      ctx.strokeRect(handle.x - HANDLE_SIZE / 2, handle.y - HANDLE_SIZE / 2, HANDLE_SIZE, HANDLE_SIZE);
     }
 
     function getHandleAt(x, y) {
-      // Check cropRect
+      /* Check cropRect first */
       if (cropRect) {
         const handle = getHandlePositions(cropRect);
-        for (let key of HANDLE_TYPES) { // only 'sw'
-          const pos = handle[key];
-          if (
-            x >= pos.x - HANDLE_SIZE/2 &&
-            x <= pos.x + HANDLE_SIZE/2 &&
-            y >= pos.y - HANDLE_SIZE/2 &&
-            y <= pos.y + HANDLE_SIZE/2
-          ) {
-            return { type: key, rect: 'crop' };
-          }
+        const pos = handle.sw;
+        if (
+          x >= pos.x - HANDLE_SIZE / 2 &&
+          x <= pos.x + HANDLE_SIZE / 2 &&
+          y >= pos.y - HANDLE_SIZE / 2 &&
+          y <= pos.y + HANDLE_SIZE / 2
+        ) {
+          return { type: 'sw', rect: 'crop' };
         }
       }
-      // Check userRectangles
+      /* Check user rectangles */
       for (let i = 0; i < userRectangles.length; i++) {
         const rect = userRectangles[i];
-        const handles = getHandlePositions(rect);
-        for (let key of HANDLE_TYPES) {
-          const pos = handles[key];
-          if (
-            x >= pos.x - HANDLE_SIZE/2 &&
-            x <= pos.x + HANDLE_SIZE/2 &&
-            y >= pos.y - HANDLE_SIZE/2 &&
-            y <= pos.y + HANDLE_SIZE/2
-          ) {
-            return { type: key, rect: 'user', index: i };
-          }
+        const handle = getHandlePositions(rect);
+        const pos = handle.sw;
+        if (
+          x >= pos.x - HANDLE_SIZE / 2 &&
+          x <= pos.x + HANDLE_SIZE / 2 &&
+          y >= pos.y - HANDLE_SIZE / 2 &&
+          y <= pos.y + HANDLE_SIZE / 2
+        ) {
+          return { type: 'sw', rect: 'user', index: i };
         }
       }
       return null;
@@ -1361,7 +1341,8 @@
       imageDataURL = croppedDataURL;
 
       uploadedImage.onload = () => {
-        adjustCanvas();
+        /* Re-apply the smaller scale logic if it exceeds 600 */
+        scaleImageIfNeeded();
         clearCanvas();
         userRectangles = [];
         rectangleTexts = {};
@@ -1374,8 +1355,9 @@
       };
     }
 
-    /* Adjust Canvas => Called after we do any forced resizing. */
+    /* Adjust Canvas */
     window.addEventListener('load', () => {
+      /* Mobile default handle size => 20, but we'll detect if bigger device. */
       updateHandleSize();
       if (uploadedImage.complete && uploadedImage.naturalWidth !== 0) {
         applyPostprocessing();
@@ -1383,7 +1365,6 @@
     });
     window.addEventListener('resize', () => {
       if (editorModal.style.display === 'block') {
-        // editor open
         adjustCanvas();
       } else {
         adjustCanvas();
@@ -1420,7 +1401,7 @@
       redrawCanvas();
     }
 
-    /* Postprocessing logic is unchanged. */
+    /* Postprocessing */
     function applyPostprocessing() {
       if (!uploadedImage.src) return;
       const ppCtx = postprocessingCanvas.getContext('2d');
@@ -1485,11 +1466,7 @@
       const width = imageData.width;
       const height = imageData.height;
 
-      const kernel = [
-        0, -1, 0,
-        -1, 5, -1,
-        0, -1, 0
-      ];
+      const kernel = [0, -1, 0, -1, 5, -1, 0, -1, 0];
       const side = Math.round(Math.sqrt(kernel.length));
       const halfSide = Math.floor(side / 2);
       const src = data;
