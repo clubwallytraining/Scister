@@ -412,6 +412,7 @@
             border-radius: 8px;
             color: #e0e0e0;
             position: relative;
+            text-align: center;
             transition: transform 0.3s ease;
             transform: translateY(-50px);
         }
@@ -832,24 +833,44 @@
                     script.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js';
                     script.defer = true;
                     document.head.appendChild(script);
-                    await new Promise((resolve) => {
-                        script.onload = resolve;
-                    });
-                    Tesseract = window.Tesseract;
+                    try {
+                        await new Promise((resolve, reject) => {
+                            script.onload = resolve;
+                            script.onerror = () => reject(new Error('Failed to load Tesseract.js'));
+                        });
+                        Tesseract = window.Tesseract;
+                        console.log('Tesseract.js loaded successfully.');
+                    } catch (error) {
+                        console.error(error);
+                        alert('Failed to load OCR library. Please check your internet connection and try again.');
+                        throw error;
+                    }
                 }
                 if (!ocrWorker) {
                     ocrWorker = Tesseract.createWorker({
                         logger: m => console.log(m)
                     });
-                    await ocrWorker.load();
-                    await ocrWorker.loadLanguage('eng');
-                    await ocrWorker.initialize('eng');
+                    try {
+                        await ocrWorker.load();
+                        await ocrWorker.loadLanguage('eng');
+                        await ocrWorker.initialize('eng');
+                        console.log('Tesseract worker initialized.');
+                    } catch (error) {
+                        console.error(error);
+                        alert('Failed to initialize OCR worker. Please try again later.');
+                        throw error;
+                    }
                 }
             }
 
             async function terminateTesseract() {
                 if (ocrWorker) {
-                    await ocrWorker.terminate();
+                    try {
+                        await ocrWorker.terminate();
+                        console.log('Tesseract worker terminated.');
+                    } catch (error) {
+                        console.error('Error terminating Tesseract worker:', error);
+                    }
                     ocrWorker = null;
                 }
             }
@@ -901,6 +922,9 @@
                     adjustCanvasModal();
                     applyCssFilters();
                     redrawCanvasModal();
+                };
+                uploadedImageModal.onerror = () => {
+                    alert('Failed to load the image. Please try uploading again.');
                 };
             }
 
@@ -1360,7 +1384,7 @@
                     redrawCanvasModal(); // Redraw rectangles in blue
                 } catch (error) {
                     console.error(error);
-                    alert('An error occurred during OCR processing.');
+                    alert('An error occurred during OCR processing. Please try again.');
                 } finally {
                     hideSpinner();
                 }
@@ -1389,15 +1413,27 @@
                 canvas.width = cropWidth;
                 canvas.height = cropHeight;
 
-                ctx.drawImage(uploadedImageModal, cropX, cropY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
+                try {
+                    ctx.drawImage(uploadedImageModal, cropX, cropY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
+                } catch (error) {
+                    console.error('Error drawing image on canvas:', error);
+                    alert('Failed to process the selected area. Please try drawing the rectangle again.');
+                    throw error;
+                }
+
                 const croppedDataURL = canvas.toDataURL();
 
-                // Perform OCR using Tesseract.js on the cropped image
-                const { data } = await ocrWorker.recognize(croppedDataURL);
-
-                const text = data.text.trim();
-                ocrCache.set(key, text);
-                return text;
+                try {
+                    // Perform OCR using Tesseract.js on the cropped image
+                    const { data } = await ocrWorker.recognize(croppedDataURL);
+                    const text = data.text.trim();
+                    ocrCache.set(key, text);
+                    return text;
+                } catch (error) {
+                    console.error('Error during OCR:', error);
+                    alert('Failed to perform OCR on the selected area.');
+                    throw error;
+                }
             }
 
             // Handle Clicks on Highlighted Areas (Blue Rectangles) in Modal
@@ -1433,8 +1469,7 @@
                     resetImageDisplay();
                     resetFields();
                     statusMessage.textContent = 'Cleared image and fields. You can upload a new image.';
-                    editorModal.style.display = 'none';
-                    editorModal.classList.remove('show');
+                    closeEditorModal();
                     openEditorBtn.style.display = 'none';
                 });
             });
@@ -1674,7 +1709,14 @@
                 canvas.width = cropWidth;
                 canvas.height = cropHeight;
 
-                ctx.drawImage(uploadedImageModal, cropX, cropY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
+                try {
+                    ctx.drawImage(uploadedImageModal, cropX, cropY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
+                } catch (error) {
+                    console.error('Error cropping image:', error);
+                    alert('Failed to crop the image. Please try again.');
+                    return;
+                }
+
                 const croppedDataURL = canvas.toDataURL();
 
                 // Update the image source
@@ -1695,6 +1737,10 @@
                     redrawCanvasModal();
 
                     applyCssFilters();
+                };
+
+                uploadedImageModal.onerror = () => {
+                    alert('Failed to load the cropped image. Please try again.');
                 };
             }
 
@@ -1817,11 +1863,23 @@
                 const sharpeningValue = parseInt(sharpeningSlider.value, 10);
                 // Note: CSS does not support sharpening directly; this would require SVG filters or canvas.
 
+                // Apply existing filters
                 uploadedImageModal.style.filter = `${grayscale} ${brightness} ${contrast} ${highlight}`;
+
+                // Apply sharpening via canvas if needed
+                if (sharpeningValue > 0) {
+                    applySharpeningFilter(sharpeningValue);
+                } else {
+                    // Remove sharpening filter if sharpeningValue is 0
+                    postprocessingCanvasModal.getContext('2d').clearRect(0, 0, postprocessingCanvasModal.width, postprocessingCanvasModal.height);
+                }
             }
 
             // Debounced Apply CSS Filters
-            const debouncedApplyCssFilters = debounce(applyCssFilters, 300);
+            const debouncedApplyCssFilters = debounce(() => {
+                applyCssFilters();
+                redrawCanvasModal();
+            }, 300);
 
             // Event Listeners for Postprocessing Controls
             grayscaleCheckbox.addEventListener('change', debouncedApplyCssFilters);
@@ -1838,7 +1896,62 @@
                 brightnessSlider.value = 0;
                 sharpeningSlider.value = 0;
                 applyCssFilters();
+                redrawCanvasModal();
             });
+
+            // Function to Apply Sharpening Filter
+            function applySharpeningFilter(intensity) {
+                if (!uploadedImageModal.src) return;
+
+                const ctx = postprocessingCanvasModal.getContext('2d');
+                ctx.clearRect(0, 0, postprocessingCanvasModal.width, postprocessingCanvasModal.height);
+                ctx.drawImage(uploadedImageModal, 0, 0, uploadedImageModal.clientWidth, uploadedImageModal.clientHeight);
+
+                let imageData = ctx.getImageData(0, 0, postprocessingCanvasModal.width, postprocessingCanvasModal.height);
+                let data = imageData.data;
+
+                // Simple sharpening kernel
+                const kernel = [
+                    0, -1, 0,
+                    -1, 5, -1,
+                    0, -1, 0
+                ];
+                const side = Math.round(Math.sqrt(kernel.length));
+                const halfSide = Math.floor(side / 2);
+                const src = data;
+                const sw = imageData.width;
+                const sh = imageData.height;
+                const output = new Uint8ClampedArray(src.length);
+
+                for (let y = 0; y < sh; y++) {
+                    for (let x = 0; x < sw; x++) {
+                        let r = 0, g = 0, b = 0;
+                        for (let ky = 0; ky < side; ky++) {
+                            for (let kx = 0; kx < side; kx++) {
+                                const pos = (y + ky - halfSide) * sw + (x + kx - halfSide);
+                                if (pos >= 0 && pos < sw * sh) {
+                                    const offset = pos * 4;
+                                    const weight = kernel[ky * side + kx];
+                                    r += src[offset] * weight;
+                                    g += src[offset + 1] * weight;
+                                    b += src[offset + 2] * weight;
+                                }
+                            }
+                        }
+                        const dstOffset = (y * sw + x) * 4;
+                        output[dstOffset] = Math.min(Math.max(r * (intensity / 100), 0), 255);
+                        output[dstOffset + 1] = Math.min(Math.max(g * (intensity / 100), 0), 255);
+                        output[dstOffset + 2] = Math.min(Math.max(b * (intensity / 100), 0), 255);
+                        output[dstOffset + 3] = src[dstOffset + 3]; // Preserve alpha
+                    }
+                }
+
+                // Put the sharpened data back
+                for (let i = 0; i < src.length; i++) {
+                    src[i] = output[i];
+                }
+                ctx.putImageData(imageData, 0, 0);
+            }
 
             /* -------------------- OCR and Drawing Logic Continued -------------------- */
 
@@ -1872,7 +1985,7 @@
             // Function to Perform OCR using the Postprocessed Image
             // Already implemented above
 
-            /* -------------------- End of OCR and Drawing Logic -------------------- */
+            /* -------------------- End of Additional Utility Functions -------------------- */
 
             /* -------------------- Hitbox Event Listeners -------------------- */
 
@@ -1973,6 +2086,9 @@
                     statusMessage.textContent = 'Image loaded. Click "Open Editor" to start editing.';
                     openEditorBtn.style.display = 'block';
                     // Optionally, show the image preview in the drop zone
+                };
+                reader.onerror = function() {
+                    alert('Failed to read the image file. Please try again.');
                 };
                 reader.readAsDataURL(file);
             }
